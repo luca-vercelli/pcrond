@@ -21,7 +21,8 @@ This project is not interested in the "human stuff" of the original project.
 
 Features 
 --------
-(well, (mostly taken from https://github.com/dbader/schedule)
+(well, mostly taken from https://github.com/dbader/schedule)
+
 - A simple to use API for scheduling jobs.
 - Very lightweight and no external dependencies.
 - Excellent test coverage.
