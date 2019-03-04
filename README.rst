@@ -32,10 +32,10 @@ Usage
 
 .. code-block:: bash
 
-    $ python ./setup.py
-    $ ./pcrond.py path/to/my/crontab/file
+    $ ./setup.py install --prefix=~/.local
+    $ pcrond path/to/my/crontab/file
     
-
+(this assumes that `~/.local/bin` is in the PATH)
 It is also possible to use this library within youir python program, however this is not the intended use.
 If you want to do this, just mimic what pcrond.py does.
 
