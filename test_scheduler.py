@@ -1,4 +1,4 @@
-#!/usr/env python
+#!/usr/bin/env python
 """Unit tests for pcrond.py"""
 import datetime
 import unittest #use "assert" and "with self.assertRaises(ValueError)"

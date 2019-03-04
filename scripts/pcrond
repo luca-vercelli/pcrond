@@ -1,4 +1,4 @@
-#!/usr/env python
+#!/usr/bin/env python
 
 from pcrond import scheduler
 
@@ -9,7 +9,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Launch a crond-like daemon in userspace.')
     parser.add_argument('filename', help='the crontab file')
     args = parser.parse_args()
-    
+
     global crontab_filename
     crontab_filename = args.filename
 
