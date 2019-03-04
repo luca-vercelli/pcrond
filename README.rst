@@ -19,8 +19,9 @@ This project is not interested in the "human stuff" of the original project.
 
 
 
-Features (mostly taken from https://github.com/dbader/schedule)
----------------------------------------------------------------
+Features 
+--------
+(well, (mostly taken from https://github.com/dbader/schedule)
 - A simple to use API for scheduling jobs.
 - Very lightweight and no external dependencies.
 - Excellent test coverage.
@@ -35,7 +36,7 @@ Usage
     $ ./pcrond.py path/to/my/crontab/file
     
 
-It is also possible to use this library within youir python program, howebver this is not the intended use.
+It is also possible to use this library within youir python program, however this is not the intended use.
 If you want to do this, just mimic what pcrond.py does.
 
 .. code-block:: python
