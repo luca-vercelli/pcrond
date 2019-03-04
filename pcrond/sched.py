@@ -1,6 +1,6 @@
 #most of the code here comes from https://github.com/dbader/schedule
 
-from job import ALIASES, Job
+from .job import ALIASES, Job
 
 def std_launch_func(cmd_splitted):
     """
