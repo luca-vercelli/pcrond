@@ -1,28 +1,26 @@
 python crond
 ============
+.. image:: https://api.travis-ci.org/luca-vercelli/schedule.svg?branch=master
+        :target: https://travis-ci.org/luca-vercelli/pcrond
+
+.. image:: https://coveralls.io/repos/luca-vercelli/pcrond/badge.svg?branch=master
+        :target: https://coveralls.io/r/luca-vercelli/pcrond
+
+
 Userspace cron daemon
+
+A daemon similar to the standard `crond`, however it is designed to run in userspace, not as root.
+Jobs scheduling use exactly the same formalism of crond.
+Written in Python.
 
 Some of the code was taken from https://github.com/dbader/schedule, release under MIT license.
 
-This project is not interested in the "human stuff" of the original problem.
-We want to launch processes in the same way crond does, and we want to do that in userspace.
+This project is not interested in the "human stuff" of the original project.
 
 
 
-
-
-.. image:: https://api.travis-ci.org/dbader/schedule.svg?branch=master
-        :target: https://travis-ci.org/dbader/schedule
-
-.. image:: https://coveralls.io/repos/dbader/schedule/badge.svg?branch=master
-        :target: https://coveralls.io/r/dbader/schedule
-
-.. image:: https://img.shields.io/pypi/v/schedule.svg
-        :target: https://pypi.python.org/pypi/schedule
-
-
-Features
---------
+Features (mostly taken from https://github.com/dbader/schedule)
+---------------------------------------------------------------
 - A simple to use API for scheduling jobs.
 - Very lightweight and no external dependencies.
 - Excellent test coverage.
@@ -43,6 +41,7 @@ If you want to do this, just mimic what pcrond.py does.
 .. code-block:: python
 
     from pcrond import scheduler
-    ...
+    scheduler.add_job("30 4 * * 0", my_python_func)     #every sunday at 4:30
+    scheduler.main_loop()
 
     
