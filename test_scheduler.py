@@ -17,40 +17,44 @@ class SchedulerTests(unittest.TestCase):
     def setUp(self):
         scheduler.clear()
 
-    def _test_job_constructor_basic(self):
-        job = Job("* * * * *")
-        assert len(job.allowed_min) == 60
-        assert len(job.allowed_hours) == 24
-        assert len(job.allowed_months) == 12
-        assert len(job.allowed_days_of_week) == 7
-        assert len(job.allowed_days_of_month) == 31
-        assert datetime.datetime.now().year in job.allowed_years
-        assert not job.allowed_last_day_of_month
-
-    def _test_job_constructor_more_complicated(self):
-        job = Job("30 4 * mar-jun,dec mon")
-        assert job.allowed_min == set([30])
+    def test_job_constructor_basic(self):
+        job = Job("* 4 * * *")
+        assert job.allowed_every_min
+        assert not job.allowed_every_hour
         assert job.allowed_hours == set([4])
-        assert job.allowed_months == set([3,4,5,6,12])
-        assert job.allowed_days_of_week == set([1])
-        assert len(job.allowed_days_of_month) == 31
-        assert datetime.datetime.now().year in job.allowed_years
-        assert not job.allowed_last_day_of_month
+        assert job.allowed_every_dow
+        assert job.allowed_every_month
+        assert job.allowed_every_dom
+        assert job.allowed_every_year
+        assert not job.must_calculate_last_dom
 
-    def _test_job_constructor_L(self):
+    def test_job_constructor_more_complicated(self):
+        job = Job("30 */2 * mar-jun,dec mon")
+        assert not job.allowed_every_min
+        assert job.allowed_min == set([30])
+        assert not job.allowed_every_hour
+        assert job.allowed_hours == set([0,2,4,6,8,10,12,14,16,18,20,22])
+        assert job.allowed_every_dom
+        assert not job.allowed_every_month
+        assert job.allowed_months == set([3,4,5,6,12])
+        assert not job.allowed_every_dow
+        assert job.allowed_dow == set([1])
+        assert job.allowed_every_year
+        assert not job.must_calculate_last_dom
+
+    def test_job_constructor_L(self):
         job = Job("* * L * *")
-        assert job.allowed_last_day_of_month
-        assert job.allowed_days_of_month == set([-1])
+        assert job.must_calculate_last_dom
+        assert job.allowed_dom == set([-1])
         assert job._check_day_in_month(datetime.datetime(2019,3,31))
         assert not job._check_day_in_month(datetime.datetime(2019,3,28))
         assert job._check_day_in_month(datetime.datetime(2019,2,28))
 
     def test_job_constructor_reverse_order(self):
         job = Job("* 23-4 * * *")
-        print(job.allowed_hours)
         assert job.allowed_hours == set([23,0,1,2,3,4])
 
-    def _test_misconfigured_job_wont_break_scheduler(self):
+    def test_misconfigured_job_wont_break_scheduler(self):
         """
         Ensure an interrupted job definition chain won't break
         the scheduler instance permanently.
