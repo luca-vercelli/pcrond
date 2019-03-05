@@ -2,12 +2,18 @@
 """Unit tests for pcrond.py"""
 import datetime
 import unittest
+import time
 
 from pcrond import scheduler, Job
 
 
 def do_nothing():
     pass
+
+def modify_obj(obj):
+    def f():
+        obj['modified'] = True
+    return f
 
 
 class SchedulerTests(unittest.TestCase):
@@ -85,7 +91,21 @@ class SchedulerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             scheduler.add_job("some very bad string pattern", do_nothing)
         scheduler.run_pending()
+    
+    def test_add_job_run_all(self):
+        test_obj = { 'modified': False }
+        scheduler.add_job("* * * * *", modify_obj(test_obj))
+        assert len(scheduler.jobs) == 1
+        scheduler.run_all()
+        assert test_obj['modified']
 
+    def test_add_job_run_pending(self):
+        test_obj = { 'modified': False }
+        now = datetime.datetime.now()
+        scheduler.add_job("%d %d * * *"  % (now.minute, now.hour), modify_obj(test_obj))
+        assert len(scheduler.jobs) == 1
+        scheduler.run_pending()
+        assert test_obj['modified']
 
 if __name__ == '__main__':
     unittest.main()
