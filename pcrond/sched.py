@@ -6,6 +6,7 @@ import time
 
 logger = logging.getLogger('schedule')
 
+
 def std_launch_func(cmd_splitted):
     """
     Default way of executing commands is to invoke subprocess.run()
@@ -100,8 +101,7 @@ class Scheduler(object):
         self.jobs.append(job)
         return job
 
-    def _load_crontab_line(self, rownum, crontab_line, job_func_func=
-                                                        std_launch_func):
+    def _load_crontab_line(self, rownum, crontab_line, job_func_func=std_launch_func):
         """
         create a Job from a single crontab entry, and add it to this Scheduler
         :param crontab_line:
@@ -109,10 +109,10 @@ class Scheduler(object):
             PRE: not empty and it not a comment
         :param job_func_func:
             function to be executed, @see load_crontab_file
-        :return: a Job 
+        :return: a Job
         """
         pieces = crontab_line.split()
-        
+
         # is pattern using aliases?
         if pieces[0] in ALIASES.keys():
             try:
@@ -143,8 +143,7 @@ class Scheduler(object):
                 print("Error at line %d, cannot parse pattern" % rownum)
                 return None
 
-    def load_crontab_file(self, crontab_file, clear=True, job_func_func=
-                                                             std_launch_func):
+    def load_crontab_file(self, crontab_file, clear=True, job_func_func=std_launch_func):
         """
         Read crontab file, create corresponding jobs in this scheduler
         :param crontab_file:
@@ -157,12 +156,12 @@ class Scheduler(object):
         """
         if clear:
             self.clear()
-        with open(crontab_file) as fp:  
+        with open(crontab_file) as fp:
             for rownum, line in enumerate(fp):
-                if line is not None:	# not sure if this can happen
+                if line is not None:                  # not sure if this can happen
                     line = line.strip()
                     if line != "" and line[0] != "#":
-                        #skip empty lines and comments
+                        # skip empty lines and comments
                         self._load_crontab_line(rownum, line, job_func_func)
 
     def main_loop(self):

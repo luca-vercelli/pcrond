@@ -41,10 +41,10 @@ class Job(object):
             crontab = ALIASES[crontab]
 
         crontab_lst = crontab.split()
-        
+
         if crontab_lst[0] in ALIASES.keys():
             raise ValueError("Cannot mix @Aliases and other tokens")
-        
+
         if len(crontab_lst) == 5:
             crontab_lst.append("*")
         if len(crontab_lst) != 6:
@@ -120,18 +120,18 @@ class Job(object):
             # here ["1","2-5","jul","10-L"]
             ranges = [x.split("-") for x in ranges]
             # here [["1"],["2","5"],["aug"], ["10","L"]]
-            ranges = [[self._parse_token(w, offsets) for w in x] \
+            ranges = [[self._parse_token(w, offsets) for w in x]
                                                             for x in ranges]
             # here [[1],[2,5],[7], [10,11]]
             if max([len(x) for x in ranges]) > 2:
                 raise ValueError(
                     "Wrong format '%s' - a string x-y-z is meaningless" % s)
             ranges_xp = [x for x in ranges if len(x) == 1]
-            ranges_xp.extend([range(x[0], x[1]+1) for x in ranges \
+            ranges_xp.extend([range(x[0], x[1]+1) for x in ranges
                                              if len(x) == 2 and x[0] <= x[1]])
-            ranges_xp.extend([range(x[0], maxval) for x in ranges \
+            ranges_xp.extend([range(x[0], maxval) for x in ranges
                                              if len(x) == 2 and x[0] > x[1]])
-            ranges_xp.extend([range(0, x[1]+1) for x in ranges \
+            ranges_xp.extend([range(0, x[1]+1) for x in ranges
                                              if len(x) == 2 and x[0] > x[1]])
             # here [[2,3,4,5], [10, 11]]
             flatlist = [z for rng in ranges_xp for z in rng]
@@ -163,7 +163,7 @@ class Job(object):
             import calendar
             last_day_of_month = calendar.monthrange(now.year, now.month)[1]
             if now.day == last_day_of_month:
-                return True;
+                return True
         return now.day in self.allowed_dom
 
     def __lt__(self, other):
@@ -181,12 +181,12 @@ class Job(object):
         now = datetime.datetime.now()
         return not self.running \
             and (self.allowed_every_year or now.year in self.allowed_years) \
-            and (self.allowed_every_month or now.month in \
+            and (self.allowed_every_month or now.month in
                                                        self.allowed_months) \
-            and (self.allowed_every_dow or now.weekday() in \
+            and (self.allowed_every_dow or now.weekday() in
                                                  self.allowed_days_in_week) \
             and (self.allowed_every_hour or now.hour in self.allowed_hours) \
-            and (self.allowed_every_minute or now.minute in \
+            and (self.allowed_every_minute or now.minute in
                                                       self.allowed_minutes) \
             and (self.allowed_every_dom or self._check_day_in_month(now))
 
