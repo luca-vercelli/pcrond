@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Unit tests for pcrond.py"""
 import datetime
-import unittest #use "assert" and "with self.assertRaises(ValueError)"
+import unittest
 
 # Silence "missing docstring", "method could be a function",
 # "class already defined", and "too many public methods" messages:
@@ -12,6 +12,7 @@ from pcrond import scheduler, Job, Scheduler
 
 def do_nothing():
     pass
+
 
 class SchedulerTests(unittest.TestCase):
     def setUp(self):
@@ -41,13 +42,13 @@ class SchedulerTests(unittest.TestCase):
         assert job.allowed_min == set([30])
         ###
         assert not job.allowed_every_hour
-        assert job.allowed_hours == set([0,3,6,9,12,15,18,21])
+        assert job.allowed_hours == set([0, 3, 6, 9, 12, 15, 18, 21])
         ###
         assert job.allowed_every_dom
         assert not job.must_calculate_last_dom
         ###
         assert not job.allowed_every_month
-        assert job.allowed_months == set([3,4,5,6,12])
+        assert job.allowed_months == set([3, 4, 5, 6, 12])
         ###
         assert not job.allowed_every_dow
         assert job.allowed_dow == set([1])
@@ -58,9 +59,9 @@ class SchedulerTests(unittest.TestCase):
         job = Job("* * L * *")
         assert job.must_calculate_last_dom
         assert job.allowed_dom == set([-1])
-        assert job._check_day_in_month(datetime.datetime(2019,3,31))
-        assert not job._check_day_in_month(datetime.datetime(2019,3,28))
-        assert job._check_day_in_month(datetime.datetime(2019,2,28))
+        assert job._check_day_in_month(datetime.datetime(2019, 3, 31))
+        assert not job._check_day_in_month(datetime.datetime(2019, 3, 28))
+        assert job._check_day_in_month(datetime.datetime(2019, 2, 28))
 
     def test_job_constructor_reverse_order(self):
         job = Job("* 23-4 * * *")
@@ -68,16 +69,16 @@ class SchedulerTests(unittest.TestCase):
 
     def test_job_constructor_wrong(self):
         with self.assertRaises(ValueError):
-            job = Job("some silly text")
+            Job("some silly text")
         with self.assertRaises(ValueError):
-            job = Job("* * goofy * *")
+            Job("* * goofy * *")
         with self.assertRaises(ValueError):
-            job = Job("* * * * * L")
+            Job("* * * * * L")
         with self.assertRaises(ValueError):
-            job = Job("* 1-2-3 * *")
+            Job("* 1-2-3 * *")
         with self.assertRaises(ValueError):
-            job = Job("* 1;2;3 * *")
-        #currently, hour=25 does not raise errors.
+            Job("* 1;2;3 * *")
+        # currently, hour=25 does not raise errors.
 
     def test_misconfigured_job_wont_break_scheduler(self):
         """
@@ -88,7 +89,7 @@ class SchedulerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             scheduler.add_job("some very bad string pattern", do_nothing)
         scheduler.run_pending()
-        
-        
+
+
 if __name__ == '__main__':
     unittest.main()
