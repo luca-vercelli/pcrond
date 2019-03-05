@@ -116,7 +116,7 @@ class SchedulerTests(unittest.TestCase):
         scheduler.cron("%d %d * * *" % (now.minute+5, now.hour), modify_obj(test_obj))
         assert len(scheduler.jobs) == 1
         scheduler.run_pending()
-        assert test_obj['modified'] == False
+        assert test_obj['modified'] is False
 
     def test_load_crontab(self):
         """ load test crontab file """

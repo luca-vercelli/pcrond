@@ -2,7 +2,8 @@
 
 from pcrond import scheduler
 
-crontab_filename=None
+crontab_filename = None
+
 
 def parse_args():
     import argparse
@@ -12,6 +13,7 @@ def parse_args():
 
     global crontab_filename
     crontab_filename = args.filename
+
 
 if __name__ == "__main__":
     parse_args()
