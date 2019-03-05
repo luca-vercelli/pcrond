@@ -66,6 +66,19 @@ class SchedulerTests(unittest.TestCase):
         job = Job("* 23-4 * * *")
         assert job.allowed_hours == set([23,0,1,2,3,4])
 
+    def test_job_constructor_wrong(self):
+        with self.assertRaises(ValueError):
+            job = Job("some silly text")
+        with self.assertRaises(ValueError):
+            job = Job("* * goofy * *")
+        with self.assertRaises(ValueError):
+            job = Job("* * * * * L")
+        with self.assertRaises(ValueError):
+            job = Job("* 1-2-3 * *")
+        with self.assertRaises(ValueError):
+            job = Job("* 1;2;3 * *")
+        #currently, hour=25 does not raise errors.
+
     def test_misconfigured_job_wont_break_scheduler(self):
         """
         Ensure an interrupted job definition chain won't break
