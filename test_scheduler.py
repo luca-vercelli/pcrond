@@ -19,28 +19,40 @@ class SchedulerTests(unittest.TestCase):
 
     def test_job_constructor_basic(self):
         job = Job("* 4 * * *")
+        ###
         assert job.allowed_every_min
+        ###
         assert not job.allowed_every_hour
         assert job.allowed_hours == set([4])
-        assert job.allowed_every_dow
-        assert job.allowed_every_month
+        ###
         assert job.allowed_every_dom
-        assert job.allowed_every_year
         assert not job.must_calculate_last_dom
+        ###
+        assert job.allowed_every_month
+        ###
+        assert job.allowed_every_dow
+        ###
+        assert job.allowed_every_year
 
     def test_job_constructor_more_complicated(self):
-        job = Job("30 */2 * mar-jun,dec mon")
+        job = Job("30 */3 * mar-jun,dec mon")
+        ###
         assert not job.allowed_every_min
         assert job.allowed_min == set([30])
+        ###
         assert not job.allowed_every_hour
-        assert job.allowed_hours == set([0,2,4,6,8,10,12,14,16,18,20,22])
+        assert job.allowed_hours == set([0,3,6,9,12,15,18,21])
+        ###
         assert job.allowed_every_dom
+        assert not job.must_calculate_last_dom
+        ###
         assert not job.allowed_every_month
         assert job.allowed_months == set([3,4,5,6,12])
+        ###
         assert not job.allowed_every_dow
         assert job.allowed_dow == set([1])
+        ###
         assert job.allowed_every_year
-        assert not job.must_calculate_last_dom
 
     def test_job_constructor_L(self):
         job = Job("* * L * *")
