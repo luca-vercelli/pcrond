@@ -93,6 +93,7 @@ class SchedulerTests(unittest.TestCase):
         scheduler.run_pending()
 
     def test_add_job_run_all(self):
+        """ schedule a task, then invoke run_all()"""
         test_obj = {'modified': False}
         scheduler.cron("* * * * *", modify_obj(test_obj))
         assert len(scheduler.jobs) == 1
@@ -100,6 +101,7 @@ class SchedulerTests(unittest.TestCase):
         assert test_obj['modified']
 
     def test_add_job_run_pending(self):
+        """ schedule a task for this exact minute, then invoke run_pending()"""
         test_obj = {'modified': False}
         now = datetime.datetime.now()
         scheduler.cron("%d %d * * *" % (now.minute, now.hour), modify_obj(test_obj))
@@ -107,7 +109,17 @@ class SchedulerTests(unittest.TestCase):
         scheduler.run_pending()
         assert test_obj['modified']
 
+    def test_add_job_run_pending_not(self):
+        """ schedule a task for this exact minute+5, then invoke run_pending()"""
+        test_obj = {'modified': False}
+        now = datetime.datetime.now()
+        scheduler.cron("%d %d * * *" % (now.minute+5, now.hour), modify_obj(test_obj))
+        assert len(scheduler.jobs) == 1
+        scheduler.run_pending()
+        assert test_obj['modified'] == False
+
     def test_load_crontab(self):
+        """ load test crontab file """
         import os
         scheduler.load_crontab_file(os.path.join("tests", "crontab.txt"))
         assert len(scheduler.jobs) == 3
