@@ -1,6 +1,6 @@
 python crond
 ============
-.. image:: https://api.travis-ci.org/luca-vercelli/schedule.svg?branch=master
+.. image:: https://api.travis-ci.org/luca-vercelli/pcrond.svg?branch=master
         :target: https://travis-ci.org/luca-vercelli/pcrond
 
 .. image:: https://coveralls.io/repos/luca-vercelli/pcrond/badge.svg?branch=master
@@ -36,9 +36,10 @@ Usage
     $ ./setup.py install --prefix=~/.local
     $ pcrond path/to/my/crontab/file
     
-(this assumes that `~/.local/bin` is in the PATH)
-It is also possible to use this library within youir python program, however this is not the intended use.
-If you want to do this, just mimic what pcrond.py does.
+(this assumes that ``~/.local/bin`` is in the PATH)
+
+It is also possible to use this library within your Python program, however this is not the intended use.
+For example:
 
 .. code-block:: python
 
