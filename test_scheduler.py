@@ -3,10 +3,6 @@
 import datetime
 import unittest
 
-# Silence "missing docstring", "method could be a function",
-# "class already defined", and "too many public methods" messages:
-# p y l i n t: disable-msg=R0201,C0111,E0102,R0904,R0901
-
 from pcrond import scheduler, Job
 
 

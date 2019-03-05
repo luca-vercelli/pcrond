@@ -50,9 +50,9 @@ class Job(object):
         if len(crontab_lst) != 6:
             raise ValueError(
                 "Each crontab pattern *must* contain either 5 or 6 items")
-        [self.allowed_every_min, self.allowed_min] =  self._parse_min(crontab_lst[0])
-        [self.allowed_every_hour, self.allowed_hours] =  self._parse_hour(crontab_lst[1])
-        [self.allowed_every_dom, self.allowed_dom] =  self._parse_day_in_month(crontab_lst[2])
+        [self.allowed_every_min, self.allowed_min] = self._parse_min(crontab_lst[0])
+        [self.allowed_every_hour, self.allowed_hours] = self._parse_hour(crontab_lst[1])
+        [self.allowed_every_dom, self.allowed_dom] = self._parse_day_in_month(crontab_lst[2])
         [self.allowed_every_month, self.allowed_months] = self._parse_month(crontab_lst[3])
         [self.allowed_every_dow, self.allowed_dow] = self._parse_day_in_week(crontab_lst[4])
         [self.allowed_every_year, self.allowed_years] = self._parse_year(crontab_lst[5])
@@ -60,8 +60,7 @@ class Job(object):
         self.must_calculate_last_dom = (-1 in self.allowed_dom)
 
         if -1 in self.allowed_years:
-            raise ValueError(("Wrong format '%s' : 'L' is meaningless " +
-                                      "talking about Years") % crontab_lst[5])
+            raise ValueError(("Wrong format '%s' : 'L' is meaningless talking about Years") % crontab_lst[5])
 
         self.crontab_pattern = crontab_lst
 
@@ -78,8 +77,7 @@ class Job(object):
         try:
             return int(token)
         except ValueError:
-            raise ValueError(("token %s is not an integer, " +
-                                        "nor it is a known constant") % token)
+            raise ValueError(("token %s is not an integer, nor it is a known constant") % token)
 
     def _parse_common(self, s, maxval, offsets={}):
         """
@@ -113,8 +111,7 @@ class Job(object):
             # here ["1","2-5","jul","10-L"]
             ranges = [x.split("-") for x in ranges]
             # here [["1"],["2","5"],["aug"], ["10","L"]]
-            ranges = [[self._parse_token(w, offsets) for w in x]
-                                                            for x in ranges]
+            ranges = [[self._parse_token(w, offsets) for w in x] for x in ranges]
             # here [[1],[2,5],[7], [10,11]]
             if max([len(x) for x in ranges]) > 2:
                 raise ValueError(
