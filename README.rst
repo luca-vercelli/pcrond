@@ -33,7 +33,7 @@ Usage
 .. code-block:: bash
 
     $ ./setup.py install --prefix=~/.local
-    $ pcrond.py path/to/my/crontab/file
+    $ pcrond.py -r path/to/my/crontab/file
     
 (this assumes that ``~/.local/bin`` is in the PATH)
 
