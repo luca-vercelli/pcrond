@@ -3,9 +3,8 @@ python crond
 .. image:: https://api.travis-ci.org/luca-vercelli/pcrond.svg?branch=master
         :target: https://travis-ci.org/luca-vercelli/pcrond
 
-.. image:: https://coveralls.io/repos/luca-vercelli/pcrond/badge.svg?branch=master
-        :target: https://coveralls.io/r/luca-vercelli/pcrond
-
+.. image:: https://coveralls.io/repos/github/luca-vercelli/pcrond/badge.svg?branch=master
+        :target: https://coveralls.io/github/luca-vercelli/pcrond?branch=master
 
 Userspace cron daemon
 
