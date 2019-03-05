@@ -87,14 +87,14 @@ class SchedulerTests(unittest.TestCase):
         Ensure an interrupted job definition chain won't break
         the scheduler instance permanently.
         """
-        scheduler.add_job("* * * * *", do_nothing)
+        scheduler.cron("* * * * *", do_nothing)
         with self.assertRaises(ValueError):
-            scheduler.add_job("some very bad string pattern", do_nothing)
+            scheduler.cron("some very bad string pattern", do_nothing)
         scheduler.run_pending()
 
     def test_add_job_run_all(self):
         test_obj = {'modified': False}
-        scheduler.add_job("* * * * *", modify_obj(test_obj))
+        scheduler.cron("* * * * *", modify_obj(test_obj))
         assert len(scheduler.jobs) == 1
         scheduler.run_all()
         assert test_obj['modified']
@@ -102,11 +102,15 @@ class SchedulerTests(unittest.TestCase):
     def test_add_job_run_pending(self):
         test_obj = {'modified': False}
         now = datetime.datetime.now()
-        scheduler.add_job("%d %d * * *" % (now.minute, now.hour), modify_obj(test_obj))
+        scheduler.cron("%d %d * * *" % (now.minute, now.hour), modify_obj(test_obj))
         assert len(scheduler.jobs) == 1
         scheduler.run_pending()
         assert test_obj['modified']
 
+    def test_load_crontab(self):
+        import os
+        scheduler.load_crontab_file(os.path.join("tests","crontab.txt"))
+        assert len(scheduler.jobs) == 3
 
 if __name__ == '__main__':
     unittest.main()

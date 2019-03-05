@@ -171,7 +171,7 @@ class Job(object):
             and (self.allowed_every_month or now.month in self.allowed_months) \
             and (self.allowed_every_dow or now.weekday() in self.allowed_days_in_week) \
             and (self.allowed_every_hour or now.hour in self.allowed_hours) \
-            and (self.allowed_every_minute or now.minute in self.allowed_minutes) \
+            and (self.allowed_every_min or now.minute in self.allowed_min) \
             and (self.allowed_every_dom or self._check_day_in_month(now))
 
     def run(self):

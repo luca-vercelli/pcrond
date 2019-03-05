@@ -37,9 +37,9 @@ class Scheduler(object):
         in one hour increments then your job won't be run 60 times in
         between but only once.
         """
-        runnable_jobs = (job for job in self.jobs if job.should_run)
+        runnable_jobs = (job for job in self.jobs if job.should_run())
         for job in runnable_jobs:
-            self._run_job(job)
+            job.run()
 
     def run_all(self, delay_seconds=0):
         """
@@ -52,7 +52,7 @@ class Scheduler(object):
         logger.info('Running *all* %i jobs with %is delay inbetween',
                     len(self.jobs), delay_seconds)
         for job in self.jobs[:]:
-            self._run_job(job)
+            job.run()
             time.sleep(delay_seconds)
 
     def clear(self):
@@ -73,20 +73,6 @@ class Scheduler(object):
             pass
 
     def cron(self, crontab, job_func):
-        """
-        Schedule a new periodic job.
-        :param crontab: A crontab-like time specification
-        :param job_func_or_command: the function to be executed
-        :return: A configured :class:`Job <Job>`
-        """
-        job = Job(crontab, job_func)
-        return job
-
-    def _run_job(self, job):
-        ret = job.job_func()
-        return ret
-
-    def add_job(self, crontab, job_func):
         """
         Create a job and add it to this Scheduler
         :param crontab:
@@ -117,29 +103,29 @@ class Scheduler(object):
         if pieces[0] in ALIASES.keys():
             try:
                 # pattern using alias
-                job = self.add_job(pieces[0:1], job_func_func(pieces[1:]))
+                job = self.cron(pieces[0:1], job_func_func(pieces[1:]))
                 return job
             except ValueError:
                 # shouldn't happen
                 print("Error at line %d, cannot parse pattern" % rownum)
                 return None
-        elif len(pieces) < 6:
+        if len(pieces) < 6:
             print("Error at line %d, expected at least 6 tokens" % rownum)
             return None
-            if len(pieces) >= 7:
-                try:
-                    # pattern including year
-                    job = self.add_job(" ".join(pieces[0:6]), job_func_func(pieces[6:]))
-                    return job
-                except ValueError:
-                    pass
+        if len(pieces) >= 7:
             try:
-                # pattern not including  year
-                job = self.add_job(" ".join(pieces[0:5]), job_func_func(pieces[5:]))
+                # pattern including year
+                job = self.cron(" ".join(pieces[0:6]), job_func_func(pieces[6:]))
                 return job
             except ValueError:
-                print("Error at line %d, cannot parse pattern" % rownum)
-                return None
+                pass
+        try:
+            # pattern not including  year
+            job = self.cron(" ".join(pieces[0:5]), job_func_func(pieces[5:]))
+            return job
+        except ValueError:
+            print("Error at line %d, cannot parse pattern" % rownum)
+            return None
 
     def load_crontab_file(self, crontab_file, clear=True, job_func_func=std_launch_func):
         """
