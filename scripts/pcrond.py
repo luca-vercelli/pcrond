@@ -2,8 +2,9 @@
 
 import logging
 
-VERSION="1.0"
+VERSION = "1.0"
 logger = logging.getLogger()
+
 
 def parse_args():
     import argparse
@@ -19,13 +20,15 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-def setup_logger(args): # HOPE this affects modules too
+
+def setup_logger(args):             # HOPE this affects modules too
     logginglevel = logging.DEBUG if args.debug else logging.INFO
     handler = logging.handlers.RotatingFileHandler(filename=args.logfile,
                                                    level=logginglevel,
                                                    maxBytes=2000,
                                                    backupCount=10)
     logger.addHandler(handler)
+
 
 if __name__ == "__main__":
     args = parse_args()
