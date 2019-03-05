@@ -14,5 +14,5 @@ setup(name='pcrond',
       author_email='luca.vercelli.to@gmail.com',
       url='https://github.com/luca-vercelli/pcrond',
       packages=['pcrond'],
-      scripts=['scripts/pcrond'],
+      scripts=['scripts/pcrond.py'],
       )
