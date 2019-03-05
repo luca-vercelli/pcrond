@@ -12,20 +12,19 @@ A daemon similar to the standard `crond`, however it is designed to run in users
 Jobs scheduling use exactly the same formalism of crond.
 Written in Python.
 
-Some of the code was taken from https://github.com/dbader/schedule, release under MIT license.
+Some of the code was taken from ``schedule`` [1], release under MIT license.
 
 This project is not interested in the "human stuff" of the original project.
 
 
-
 Features 
 --------
-(well, mostly taken from https://github.com/dbader/schedule)
+(well, mostly taken from [1])
 
 - A simple to use API for scheduling jobs.
 - Very lightweight and no external dependencies.
-- Excellent test coverage.
-- Tested on Python 2.7, 3.5, and 3.6
+- Good test coverage.
+- Tested on Python 2.7 and 3.6
 
 Usage
 -----
@@ -47,3 +46,4 @@ For example:
     scheduler.main_loop()
 
     
+[1] https://github.com/dbader/schedule
