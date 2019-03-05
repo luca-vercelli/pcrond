@@ -1,6 +1,8 @@
-#most of the code here comes from https://github.com/dbader/schedule
+# most of the code here comes from https://github.com/dbader/schedule
 
 from .job import ALIASES, Job
+import logging
+import time
 
 def std_launch_func(cmd_splitted):
     """
@@ -9,8 +11,9 @@ def std_launch_func(cmd_splitted):
     def f():
         import subprocess
         subprocess.run(cmd_splitted)
-        #not returning anything here
+        # not returning anything here
     return f
+
 
 class Scheduler(object):
     """
@@ -19,7 +22,7 @@ class Scheduler(object):
     handle their execution.
     """
     def __init__(self):
-        self.delay = 60         #in seconds
+        self.delay = 60         # in seconds
         self.jobs = []
 
     def run_pending(self):
@@ -78,13 +81,15 @@ class Scheduler(object):
 
     def _run_job(self, job):
         ret = job.job_func()
+        return ret
 
     def add_job(self, crontab, job_func):
         """
         Create a job and add it to this Scheduler
         :param crontab:
             string containing crontab pattern
-            Its tokens may be either: 1 (if alias), 5 (without year token), 6 (with year token)
+            Its tokens may be either: 1 (if alias), 5 (without year token),
+            6 (with year token)
         :param job_func:
             the job 0-ary function to run
         :return: a Job
@@ -92,8 +97,9 @@ class Scheduler(object):
         job = Job(crontab, job_func, self)
         self.jobs.append(job)
         return job
-        
-    def _load_crontab_line(self, rownum, crontab_line, job_func_func=std_launch_func):
+
+    def _load_crontab_line(self, rownum, crontab_line, job_func_func=
+                                                        std_launch_func):
         """
         create a Job from a single crontab entry, and add it to this Scheduler
         :param crontab_line:
@@ -105,40 +111,45 @@ class Scheduler(object):
         """
         pieces = crontab_line.split()
         
-        #is pattern using aliases?
+        # is pattern using aliases?
         if pieces[0] in ALIASES.keys():
             try:
-                #pattern using alias
+                # pattern using alias
                 job = self.add_job(pieces[0:1], job_func_func(pieces[1:]))
                 return job
             except ValueError:
-                print("Error at line %d, cannot parse pattern" % rownum)    #shouldn't happen
+                # shouldn't happen
+                print("Error at line %d, cannot parse pattern" % rownum)
                 return None
         elif len(pieces) < 6:
             print("Error at line %d, expected at least 6 tokens" % rownum)
             return None
             if len(pieces) >= 7:
                 try:
-                    #pattern including year
-                    job = self.add_job(" ".join(pieces[0:6]), job_func_func(pieces[6:]))
+                    # pattern including year
+                    job = self.add_job(" ".join(pieces[0:6]), job_func_func(
+                                                                pieces[6:]))
                     return job
                 except ValueError:
                     pass
             try:
-                #pattern not including  year
-                job = self.add_job(" ".join(pieces[0:5]), job_func_func(pieces[5:]))
+                # pattern not including  year
+                job = self.add_job(" ".join(pieces[0:5]), job_func_func(
+                                                                pieces[5:]))
                 return job
             except ValueError:
                 print("Error at line %d, cannot parse pattern" % rownum)
                 return None
 
-    def load_crontab_file(self, crontab_file, clear=True, job_func_func=std_launch_func):
+    def load_crontab_file(self, crontab_file, clear=True, job_func_func=
+                                                             std_launch_func):
         """
         Read crontab file, create corresponding jobs in this scheduler
         :param crontab_file:
             crontab file path
         :param job_func_func:
-            a function that takes a list of tokens (from crontab file) and returns a 0-args function
+            a function that takes a list of tokens (from crontab file) and
+            returns a 0-args function
         :param clear:
             should the new schedule override the previous ones?
         """
@@ -160,4 +171,3 @@ class Scheduler(object):
         while True:
             self.run_pending()
             time.sleep(self.delay)
-

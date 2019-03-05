@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-#this is the standard way of installing a Python module, using distutils:
-#sudo ./setup.py install
-#or
-#./setup.py install --prefix=~/.local
-#uninstall is not provided, see https://stackoverflow.com/questions/1550226
+# this is the standard way of installing a Python module, using distutils:
+# sudo ./setup.py install
+# or
+# ./setup.py install --prefix=~/.local
+# uninstall is not provided, see https://stackoverflow.com/questions/1550226
 
 from distutils.core import setup
 
@@ -15,5 +15,4 @@ setup(name='pcrond',
       url='https://github.com/luca-vercelli/pcrond',
       packages=['pcrond'],
       scripts=['scripts/pcrond'],
-     )
-
+      )

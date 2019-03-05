@@ -1,8 +1,8 @@
 
 MONTH_OFFSET = {'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,
-        'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov':11, 'dec':12}
+                'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12}
 WEEK_OFFSET = {'sun': 0, 'mon': 1, 'tue': 2, 'wed': 3, 'thu': 4, 'fri': 5,
-        'sat': 6}
+               'sat': 6}
 ALIASES = {
     '@yearly':  '0 0 1 1 *',
     '@annually':  '0 0 1 1 *',
@@ -11,6 +11,10 @@ ALIASES = {
     '@daily':   '0 0 * * *',
     '@hourly':  '0 * * * *',
 }
+
+import logging
+logger = logging.getLogger('schedule')
+
 
 class Job(object):
     """
@@ -21,7 +25,8 @@ class Job(object):
         Constructor
         :param crontab:
             string containing crontab pattern
-            Its tokens may be either: 1 (if alias), 5 (without year token), 6 (with year token)
+            Its tokens may be either: 1 (if alias), 5 (without year token),
+            6 (with year token)
         :param job_func:
             the job 0-ary function to run
             if None, you should set it later
@@ -44,18 +49,26 @@ class Job(object):
         if len(crontab_lst) == 5:
             crontab_lst.append("*")
         if len(crontab_lst) != 6:
-            raise ValueError("Each crontab pattern *must* contain either 5 or 6 items")
-        [self.allowed_every_min, self.allowed_min] = self._parse_min(crontab_lst[0])
-        [self.allowed_every_hour, self.allowed_hours] = self._parse_hour(crontab_lst[1])
-        [self.allowed_every_dom, self.allowed_dom] = self._parse_day_in_month(crontab_lst[2])
-        [self.allowed_every_month, self.allowed_months] = self._parse_month(crontab_lst[3])
-        [self.allowed_every_dow, self.allowed_dow] = self._parse_day_in_week(crontab_lst[4])
-        [self.allowed_every_year, self.allowed_years] = self._parse_year(crontab_lst[5])
+            raise ValueError(
+                "Each crontab pattern *must* contain either 5 or 6 items")
+        [self.allowed_every_min, self.allowed_min] = \
+                self._parse_min(crontab_lst[0])
+        [self.allowed_every_hour, self.allowed_hours] = \
+                self._parse_hour(crontab_lst[1])
+        [self.allowed_every_dom, self.allowed_dom] = \
+                self._parse_day_in_month(crontab_lst[2])
+        [self.allowed_every_month, self.allowed_months] = \
+                self._parse_month(crontab_lst[3])
+        [self.allowed_every_dow, self.allowed_dow] = \
+                self._parse_day_in_week(crontab_lst[4])
+        [self.allowed_every_year, self.allowed_years] = \
+                self._parse_year(crontab_lst[5])
         
-        self.must_calculate_last_dom = True if -1 in self.allowed_dom else False
+        self.must_calculate_last_dom = (-1 in self.allowed_dom)
         
         if -1 in self.allowed_years:
-            raise ValueError("Wrong format '%s' : 'L' is meaningless talking about Years" % crontab_lst[5])
+            raise ValueError(("Wrong format '%s' : 'L' is meaningless " +
+                                      "talking about Years") % crontab_lst[5])
         
         self.crontab_pattern = crontab_lst
 
@@ -68,21 +81,26 @@ class Job(object):
             try:
                 return int(newtoken)
             except ValueError:
-                raise ValueError("token %s maps to %s, however the latter is not an integer" % (token, newtoken))
+                raise ValueError("token %s maps to %s, however the latter " +
+                    "is not an integer" % (token, newtoken))
         try:
             return int(token)
         except ValueError:
-            raise ValueError("token %s is not an integer, nor it is a known constant" % token)
+            raise ValueError(("token %s is not an integer, " +
+                                        "nor it is a known constant") % token)
             
     
     def _parse_common(self, s, maxval, offsets={}):
         """
-        generate a set of integers, corresponding to "allowed values".
-        Work for minute, hours, weeks, month, ad days of week, because they are all "similar".
+        Generate a set of integers, corresponding to "allowed values".
+        Work for minute, hours, weeks, month, ad days of week, because they
+        are all "similar".
         Does not work very well for years and days of month
         Supported formats: "*", "*/3", "1,2,3", "L", "1,2-5,jul,10-L", "50-10"
-        :param maxval: es. 60 for minutes, 12 for month, ...
-        :param offsets: a dict mapping names (es. "mar") to their offsets (es. 2).
+        :param maxval:
+            es. 60 for minutes, 12 for month, ...
+        :param offsets:
+            a dict mapping names (es. "mar") to their offsets (es. 2).
         """
         if "L" not in offsets:
             offsets["L"] = maxval-1
@@ -92,7 +110,8 @@ class Job(object):
             try:
                 step = int(s[2:])
             except ValueError:
-                raise ValueError("Wrong format '%s' - expecting an integer after '*/'" % s)
+                raise ValueError(
+                    "Wrong format '%s' - expecting an integer after '*/'" % s)
             return [False, set(range(0, maxval, step))]
         else:                           #at given minutes
             ranges = s.split(",")                       #   ["1","2-5","jul","10-L"]
@@ -123,15 +142,16 @@ class Job(object):
         return self._parse_common(s, 7, WEEK_OFFSET)
 
     def _parse_year(self, s):
-        """ to put things simple, I assume a range of years between 0 and 3000 ... This is mostly useless. """
+        """ to put things simple, I assume a range of years between 0 and 3000 ...
+        This is mostly useless. """
         return self._parse_common(s, 3000, {"L" : -1})
 
     def _parse_day_in_month(self, s):
-        return self._parse_common(s, 31, {"L" : -1})    #this works by chance
+        return self._parse_common(s, 31, {"L" : -1})    # this works by chance
 
     def _check_day_in_month(self, now):
         if self.must_calculate_last_dom:
-            #this is a hack for avoiding to calculate "L" when not needed
+            # this is a hack for avoiding to calculate "L" when not needed
             import calendar
             last_day_of_month = calendar.monthrange(now.year, now.month)[1]
             if now.day == last_day_of_month:
@@ -151,7 +171,6 @@ class Job(object):
         """
         import datetime
         now = datetime.datetime.now()
-        #FIXME was: return datetime.datetime.now() >= self.next_run
         return not self.running \
             and (self.allowed_every_year or now.year in self.allowed_years) \
             and (self.allowed_every_month or now.month in self.allowed_months) \
@@ -165,17 +184,16 @@ class Job(object):
         Run the job.
         :return: The return value returned by the `job_func`
         """
+        logger.info('Running job %s', self)
         self.running = True
         ret = self.job_func()
         self.running = false
         return ret
-        
+
     def run_if_should(self):
         """
         Run the job if needed.
         :return: The return value returned by the `job_func`
         """
         if self.should_run():
-            logger.info('Running job %s', self)
             return self.run()
-
