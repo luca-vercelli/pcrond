@@ -109,8 +109,9 @@ class SchedulerTests(unittest.TestCase):
 
     def test_load_crontab(self):
         import os
-        scheduler.load_crontab_file(os.path.join("tests","crontab.txt"))
+        scheduler.load_crontab_file(os.path.join("tests", "crontab.txt"))
         assert len(scheduler.jobs) == 3
+
 
 if __name__ == '__main__':
     unittest.main()
