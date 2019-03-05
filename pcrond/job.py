@@ -1,19 +1,18 @@
 
+import logging
+logger = logging.getLogger('schedule')
+
 MONTH_OFFSET = {'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,
                 'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12}
 WEEK_OFFSET = {'sun': 0, 'mon': 1, 'tue': 2, 'wed': 3, 'thu': 4, 'fri': 5,
                'sat': 6}
-ALIASES = {
-    '@yearly':  '0 0 1 1 *',
-    '@annually':  '0 0 1 1 *',
-    '@monthly': '0 0 1 * *',
-    '@weekly':  '0 0 * * 0',
-    '@daily':   '0 0 * * *',
-    '@hourly':  '0 * * * *',
-}
-
-import logging
-logger = logging.getLogger('schedule')
+ALIASES = {'@yearly':  '0 0 1 1 *',
+           '@annually':  '0 0 1 1 *',
+           '@monthly': '0 0 1 * *',
+           '@weekly':  '0 0 * * 0',
+           '@daily':   '0 0 * * *',
+           '@hourly':  '0 * * * *',
+           }
 
 
 class Job(object):
@@ -63,13 +62,13 @@ class Job(object):
                 self._parse_day_in_week(crontab_lst[4])
         [self.allowed_every_year, self.allowed_years] = \
                 self._parse_year(crontab_lst[5])
-        
+
         self.must_calculate_last_dom = (-1 in self.allowed_dom)
-        
+
         if -1 in self.allowed_years:
             raise ValueError(("Wrong format '%s' : 'L' is meaningless " +
                                       "talking about Years") % crontab_lst[5])
-        
+
         self.crontab_pattern = crontab_lst
 
     def _parse_token(self, token, offsets):
@@ -88,8 +87,7 @@ class Job(object):
         except ValueError:
             raise ValueError(("token %s is not an integer, " +
                                         "nor it is a known constant") % token)
-            
-    
+
     def _parse_common(self, s, maxval, offsets={}):
         """
         Generate a set of integers, corresponding to "allowed values".
@@ -105,27 +103,37 @@ class Job(object):
         if "L" not in offsets:
             offsets["L"] = maxval-1
         if s == "*":
-            return [True, []]          #every minute
-        elif s.startswith("*/"):        #every tot minutes
+            return [True, []]           # every minute
+        elif s.startswith("*/"):        # every tot minutes
             try:
                 step = int(s[2:])
             except ValueError:
                 raise ValueError(
                     "Wrong format '%s' - expecting an integer after '*/'" % s)
             return [False, set(range(0, maxval, step))]
-        else:                           #at given minutes
-            ranges = s.split(",")                       #   ["1","2-5","jul","10-L"]
-            ranges = [x.split("-") for x in ranges]     #   [["1"],["2","5"],["aug"], ["10","L"]]
-            ranges = [[self._parse_token(w, offsets) for w in x] for x in ranges]  #   [[1],[2,5],[7], [10,11]]
-            #DEBUG
-            #import pdb
-            #pdb.set_trace()
+        else:                           # at given minutes
+            # DEBUG
+            # import pdb
+            # pdb.set_trace()
+            # here "1,2-5,jul,10-L"
+            ranges = s.split(",")
+            # here ["1","2-5","jul","10-L"]
+            ranges = [x.split("-") for x in ranges]
+            # here [["1"],["2","5"],["aug"], ["10","L"]]
+            ranges = [[self._parse_token(w, offsets) for w in x] \
+                                                            for x in ranges]
+            # here [[1],[2,5],[7], [10,11]]
             if max([len(x) for x in ranges]) > 2:
-                raise ValueError("Wrong format '%s' - a string x-y-z is meaningless" % s)
-            ranges_xp = [x for x in ranges if len(x)==1]                                             # [[1], [7]]
-            ranges_xp.extend([range(x[0], x[1]+1) for x in ranges if len(x)==2 and x[0]<=x[1]])      # [[2,3,4,5], [10, 11]]
-            ranges_xp.extend([range(x[0], maxval) for x in ranges if len(x)==2 and x[0]>x[1]])       # [] in this case
-            ranges_xp.extend([range(0, x[1]+1) for x in ranges if len(x)==2 and x[0]>x[1]])          # [] in this case
+                raise ValueError(
+                    "Wrong format '%s' - a string x-y-z is meaningless" % s)
+            ranges_xp = [x for x in ranges if len(x) == 1]
+            ranges_xp.extend([range(x[0], x[1]+1) for x in ranges \
+                                             if len(x) == 2 and x[0] <= x[1]])
+            ranges_xp.extend([range(x[0], maxval) for x in ranges \
+                                             if len(x) == 2 and x[0] > x[1]])
+            ranges_xp.extend([range(0, x[1]+1) for x in ranges \
+                                             if len(x) == 2 and x[0] > x[1]])
+            # here [[2,3,4,5], [10, 11]]
             flatlist = [z for rng in ranges_xp for z in rng]
             return [False, set(flatlist)]
 
@@ -142,12 +150,12 @@ class Job(object):
         return self._parse_common(s, 7, WEEK_OFFSET)
 
     def _parse_year(self, s):
-        """ to put things simple, I assume a range of years between 0 and 3000 ...
+        """ to put things simple, I assume a range of years between 0 and 3000
         This is mostly useless. """
-        return self._parse_common(s, 3000, {"L" : -1})
+        return self._parse_common(s, 3000, {"L": -1})
 
     def _parse_day_in_month(self, s):
-        return self._parse_common(s, 31, {"L" : -1})    # this works by chance
+        return self._parse_common(s, 31, {"L": -1})    # this works by chance
 
     def _check_day_in_month(self, now):
         if self.must_calculate_last_dom:
@@ -156,7 +164,7 @@ class Job(object):
             last_day_of_month = calendar.monthrange(now.year, now.month)[1]
             if now.day == last_day_of_month:
                 return True;
-        return now.day in self.allowed_dom;
+        return now.day in self.allowed_dom
 
     def __lt__(self, other):
         """
@@ -173,11 +181,14 @@ class Job(object):
         now = datetime.datetime.now()
         return not self.running \
             and (self.allowed_every_year or now.year in self.allowed_years) \
-            and (self.allowed_every_month or now.month in self.allowed_months) \
-            and (self.allowed_every_dow or now.weekday() in self.allowed_days_in_week) \
+            and (self.allowed_every_month or now.month in \
+                                                       self.allowed_months) \
+            and (self.allowed_every_dow or now.weekday() in \
+                                                 self.allowed_days_in_week) \
             and (self.allowed_every_hour or now.hour in self.allowed_hours) \
-            and (self.allowed_every_minute or nownow.minute in self.allowed_minutes) \
-            and (self.allowed_every_dom or self._check_day_in_month(now));
+            and (self.allowed_every_minute or now.minute in \
+                                                      self.allowed_minutes) \
+            and (self.allowed_every_dom or self._check_day_in_month(now))
 
     def run(self):
         """
@@ -187,7 +198,7 @@ class Job(object):
         logger.info('Running job %s', self)
         self.running = True
         ret = self.job_func()
-        self.running = false
+        self.running = False
         return ret
 
     def run_if_should(self):

@@ -4,6 +4,8 @@ from .job import ALIASES, Job
 import logging
 import time
 
+logger = logging.getLogger('schedule')
+
 def std_launch_func(cmd_splitted):
     """
     Default way of executing commands is to invoke subprocess.run()
