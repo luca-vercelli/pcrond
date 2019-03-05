@@ -29,11 +29,11 @@ def setup_logger(args):             # HOPE this affects modules too
                                                    backupCount=10)
     logger.addHandler(handler)
 
-
+    
 if __name__ == "__main__":
     args = parse_args()
     if args.version:
-        print VERSION
+        print(VERSION)
         exit(0)
     setup_logger(args)
 
