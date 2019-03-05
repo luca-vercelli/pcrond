@@ -129,15 +129,13 @@ class Scheduler(object):
             if len(pieces) >= 7:
                 try:
                     # pattern including year
-                    job = self.add_job(" ".join(pieces[0:6]), job_func_func(
-                                                                pieces[6:]))
+                    job = self.add_job(" ".join(pieces[0:6]), job_func_func(pieces[6:]))
                     return job
                 except ValueError:
                     pass
             try:
                 # pattern not including  year
-                job = self.add_job(" ".join(pieces[0:5]), job_func_func(
-                                                                pieces[5:]))
+                job = self.add_job(" ".join(pieces[0:5]), job_func_func(pieces[5:]))
                 return job
             except ValueError:
                 print("Error at line %d, cannot parse pattern" % rownum)

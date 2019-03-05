@@ -50,18 +50,12 @@ class Job(object):
         if len(crontab_lst) != 6:
             raise ValueError(
                 "Each crontab pattern *must* contain either 5 or 6 items")
-        [self.allowed_every_min, self.allowed_min] = \
-                self._parse_min(crontab_lst[0])
-        [self.allowed_every_hour, self.allowed_hours] = \
-                self._parse_hour(crontab_lst[1])
-        [self.allowed_every_dom, self.allowed_dom] = \
-                self._parse_day_in_month(crontab_lst[2])
-        [self.allowed_every_month, self.allowed_months] = \
-                self._parse_month(crontab_lst[3])
-        [self.allowed_every_dow, self.allowed_dow] = \
-                self._parse_day_in_week(crontab_lst[4])
-        [self.allowed_every_year, self.allowed_years] = \
-                self._parse_year(crontab_lst[5])
+        [self.allowed_every_min, self.allowed_min] =  self._parse_min(crontab_lst[0])
+        [self.allowed_every_hour, self.allowed_hours] =  self._parse_hour(crontab_lst[1])
+        [self.allowed_every_dom, self.allowed_dom] =  self._parse_day_in_month(crontab_lst[2])
+        [self.allowed_every_month, self.allowed_months] = self._parse_month(crontab_lst[3])
+        [self.allowed_every_dow, self.allowed_dow] = self._parse_day_in_week(crontab_lst[4])
+        [self.allowed_every_year, self.allowed_years] = self._parse_year(crontab_lst[5])
 
         self.must_calculate_last_dom = (-1 in self.allowed_dom)
 
@@ -80,8 +74,7 @@ class Job(object):
             try:
                 return int(newtoken)
             except ValueError:
-                raise ValueError("token %s maps to %s, however the latter " +
-                    "is not an integer" % (token, newtoken))
+                raise ValueError("token %s maps to %s, however the latter is not an integer" % (token, newtoken))
         try:
             return int(token)
         except ValueError:
@@ -127,12 +120,9 @@ class Job(object):
                 raise ValueError(
                     "Wrong format '%s' - a string x-y-z is meaningless" % s)
             ranges_xp = [x for x in ranges if len(x) == 1]
-            ranges_xp.extend([range(x[0], x[1]+1) for x in ranges
-                                             if len(x) == 2 and x[0] <= x[1]])
-            ranges_xp.extend([range(x[0], maxval) for x in ranges
-                                             if len(x) == 2 and x[0] > x[1]])
-            ranges_xp.extend([range(0, x[1]+1) for x in ranges
-                                             if len(x) == 2 and x[0] > x[1]])
+            ranges_xp.extend([range(x[0], x[1]+1) for x in ranges if len(x) == 2 and x[0] <= x[1]])
+            ranges_xp.extend([range(x[0], maxval) for x in ranges if len(x) == 2 and x[0] > x[1]])
+            ranges_xp.extend([range(0, x[1]+1) for x in ranges if len(x) == 2 and x[0] > x[1]])
             # here [[2,3,4,5], [10, 11]]
             flatlist = [z for rng in ranges_xp for z in rng]
             return [False, set(flatlist)]
@@ -181,13 +171,10 @@ class Job(object):
         now = datetime.datetime.now()
         return not self.running \
             and (self.allowed_every_year or now.year in self.allowed_years) \
-            and (self.allowed_every_month or now.month in
-                                                       self.allowed_months) \
-            and (self.allowed_every_dow or now.weekday() in
-                                                 self.allowed_days_in_week) \
+            and (self.allowed_every_month or now.month in self.allowed_months) \
+            and (self.allowed_every_dow or now.weekday() in self.allowed_days_in_week) \
             and (self.allowed_every_hour or now.hour in self.allowed_hours) \
-            and (self.allowed_every_minute or now.minute in
-                                                      self.allowed_minutes) \
+            and (self.allowed_every_minute or now.minute in self.allowed_minutes) \
             and (self.allowed_every_dom or self._check_day_in_month(now))
 
     def run(self):
