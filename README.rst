@@ -8,7 +8,7 @@ python crond
 
 Userspace cron daemon
 
-A daemon similar to the standard `crond` [1], however it is designed to run in userspace, not as root.
+A daemon similar to the standard ``crond`` [1], however it is designed to run in userspace, not as root.
 Jobs scheduling use exactly the same formalism of crond.
 Written in Python.
 
