@@ -63,12 +63,22 @@ class Job(object):
         if len(crontab_lst) != 6:
             raise ValueError(
                 "Each crontab pattern *must* contain either 5 or 6 items")
+
+        # Easy ones:
         [self.allowed_every_min, self.allowed_min] = self._parse_min(crontab_lst[0])
         [self.allowed_every_hour, self.allowed_hours] = self._parse_hour(crontab_lst[1])
-        [self.allowed_every_dom, self.allowed_dom] = self._parse_day_in_month(crontab_lst[2])
         [self.allowed_every_month, self.allowed_months] = self._parse_month(crontab_lst[3])
-        [self.allowed_every_dow, self.allowed_dow] = self._parse_day_in_week(crontab_lst[4])
         [self.allowed_every_year, self.allowed_years] = self._parse_year(crontab_lst[5])
+
+        # Day of month.
+        # L = last day
+        # 15W= last working day before 15th, or the first one after if none
+        [self.allowed_every_dom, self.allowed_dom] = self._parse_day_in_month(crontab_lst[2])
+
+        # Day of week.
+        # 5L = last friday of the month
+        # 2#5 = second friday of the month
+        [self.allowed_every_dow, self.allowed_dow] = self._parse_day_in_week(crontab_lst[4])
 
         self.allowed_last_dom = (-1 in self.allowed_dom)
 
@@ -103,7 +113,7 @@ class Job(object):
 
     def _split_tokens(self, s):
         """
-        given "1,2-5,jul,10-L" return [["1"],["2","5"],["jul"], ["10","L"]]
+        given "1,2-5,jul,10-goofy" return [["1"],["2","5"],["jul"], ["10","goofy"]]
         * and @ not supported
         """
         # here "1,2-5,jul,10-L"
