@@ -26,16 +26,22 @@ Features
 - Good test coverage.
 - Tested on Python 2.7 and 3.6
 
-Usage
+Install
 -----
 
 .. code-block:: bash
 
     $ ./setup.py install --prefix=~/.local
+    
+(this assumes that ``~/.local/bin`` is in the PATH, that is quite common)
+
+Usage
+-----
+
+.. code-block:: bash
+
     $ pcrond.py -r path/to/my/crontab/file
     
-(this assumes that ``~/.local/bin`` is in the PATH)
-
 It is also possible to use this library within your Python program, however this is not the intended use.
 For example:
 
