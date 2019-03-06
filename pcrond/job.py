@@ -106,11 +106,8 @@ class Job(object):
 
     def _explode_ranges(self, ranges, minval, maxval):
         """
-        given [[1],[2,5],[7], [10,11]] return  [[1], [2,3,4,5], [7], [10, 11]] 
+        given [[1],[2,5],[7], [10,11]] return  [[1], [2,3,4,5], [7], [10, 11]]
         """
-        if max([len(x) for x in ranges]) > 2:
-            raise ValueError(
-                "Wrong format '%s' - a string x-y-z is meaningless" % s)
         ranges_xp = [x for x in ranges if len(x) == 1]
         ranges_xp.extend([range(x[0], x[1]+1) for x in ranges if len(x) == 2 and x[0] <= x[1]])
         ranges_xp.extend([range(x[0], maxval) for x in ranges if len(x) == 2 and x[0] > x[1]])
@@ -146,6 +143,8 @@ class Job(object):
             ranges = self._split_tokens(s)
             # here [["1"],["2","5"],["jul"], ["10","L"]]
             ranges = [[self._parse_token(w, offsets) for w in x] for x in ranges]
+            if max([len(x) for x in ranges]) > 2:
+                raise ValueError("Wrong format '%s' - a string x-y-z is meaningless" % s)    
             ranges_xp = self._explode_ranges(ranges, minval, maxval)
             flatlist = [z for rng in ranges_xp for z in rng]
             return [False, set(flatlist)]
@@ -207,8 +206,8 @@ class Job(object):
                 and (self.allowed_every_dow
                      or ((now.weekday() + 1) % 7) in self.allowed_dow
                      or (self.must_consider_wom
-                         and (now.weekday() + 8) % 7) in self.allowed_dow
-                         and self.is_last_wom(now))
+                         and (now.weekday() - 6) in self.allowed_dow
+                         and self.is_last_wom(now)))
                 and (self.allowed_every_dom
                      or now.day in self.allowed_dom
                      or (self.allowed_last_dom and now.day == self.get_last_dom(now)))

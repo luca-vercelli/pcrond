@@ -38,7 +38,7 @@ class SchedulerTests(unittest.TestCase):
         assert job.allowed_every_year
 
     def test_job_constructor_more_complicated(self):
-        job = Job("30 */3 * mar-jun,dec mon")
+        job = Job("30 */3 * mar-jun,dec MON")
         ###
         assert not job.allowed_every_min
         assert job.allowed_min == set([30])
@@ -57,13 +57,24 @@ class SchedulerTests(unittest.TestCase):
         ###
         assert job.allowed_every_year
 
-    def test_job_constructor_L(self):
+    def test_job_constructor_L_dom(self):
         job = Job("* * L * *")
         assert job.allowed_last_dom
         assert job.allowed_dom == set([-1])
         assert job._should_run_at(datetime.datetime(2019, 3, 31))
         assert not job._should_run_at(datetime.datetime(2019, 3, 28))
         assert job._should_run_at(datetime.datetime(2019, 2, 28))
+
+    def test_job_constructor_L_dow(self):
+        job = Job("* * * * 5l")      #5=friday, l=only the last one of the month
+        assert job.must_consider_wom
+        assert job.allowed_every_dom
+        assert not job.allowed_last_dom
+        assert not job.allowed_every_dow
+        assert job.allowed_dow == set([5-7])
+        assert job._should_run_at(datetime.datetime(2019, 3, 29))       # was fri
+        assert not job._should_run_at(datetime.datetime(2019, 3, 28))   # was thu
+        assert not job._should_run_at(datetime.datetime(2019, 3, 8))    # was fri
 
     def test_job_constructor_alias(self):
         job = Job("@hourly")
