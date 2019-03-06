@@ -29,7 +29,7 @@ class SchedulerTests(unittest.TestCase):
         assert job.allowed_hours == set([4])
         ###
         assert job.allowed_every_dom
-        assert not job.must_calculate_last_dom
+        assert not job.allowed_last_dom
         ###
         assert job.allowed_every_month
         ###
@@ -47,7 +47,7 @@ class SchedulerTests(unittest.TestCase):
         assert job.allowed_hours == set([0, 3, 6, 9, 12, 15, 18, 21])
         ###
         assert job.allowed_every_dom
-        assert not job.must_calculate_last_dom
+        assert not job.allowed_last_dom
         ###
         assert not job.allowed_every_month
         assert job.allowed_months == set([3, 4, 5, 6, 12])
@@ -59,11 +59,18 @@ class SchedulerTests(unittest.TestCase):
 
     def test_job_constructor_L(self):
         job = Job("* * L * *")
-        assert job.must_calculate_last_dom
+        assert job.allowed_last_dom
         assert job.allowed_dom == set([-1])
-        assert job._check_day_in_month(datetime.datetime(2019, 3, 31))
-        assert not job._check_day_in_month(datetime.datetime(2019, 3, 28))
-        assert job._check_day_in_month(datetime.datetime(2019, 2, 28))
+        assert job._should_run_at(datetime.datetime(2019, 3, 31))
+        assert not job._should_run_at(datetime.datetime(2019, 3, 28))
+        assert job._should_run_at(datetime.datetime(2019, 2, 28))
+
+    def test_job_constructor_alias(self):
+        job = Job("@hourly")
+        assert not job.allowed_every_min
+        assert job.allowed_every_hour
+        assert job.allowed_every_month
+        assert job.allowed_every_year
 
     def test_job_constructor_reverse_order(self):
         job = Job("* 23-4 * * *")
@@ -80,6 +87,8 @@ class SchedulerTests(unittest.TestCase):
             Job("* 1-2-3 * *")
         with self.assertRaises(ValueError):
             Job("* 1;2;3 * *")
+        with self.assertRaises(ValueError):
+            Job("* @hourly")
         # currently, hour=25 does not raise errors.
 
     def test_misconfigured_job_wont_break_scheduler(self):

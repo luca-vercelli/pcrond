@@ -8,18 +8,17 @@ python crond
 
 Userspace cron daemon
 
-A daemon similar to the standard `crond`, however it is designed to run in userspace, not as root.
+A daemon similar to the standard `crond` [1], however it is designed to run in userspace, not as root.
 Jobs scheduling use exactly the same formalism of crond.
 Written in Python.
 
-Some of the code was taken from ``schedule`` [1], release under MIT license.
-
+Some of the code was taken from ``schedule`` project [2].
 This project is not interested in the "human stuff" of the original project.
 
 
 Features 
 --------
-(well, mostly taken from [1])
+(well, mostly taken from [2])
 
 - A simple to use API for scheduling jobs.
 - Very lightweight and no external dependencies.
@@ -52,4 +51,6 @@ For example:
     scheduler.main_loop()
 
     
-[1] https://github.com/dbader/schedule
+[1] https://en.wikipedia.org/wiki/Cron
+[2] https://github.com/dbader/schedule
+

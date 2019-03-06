@@ -60,6 +60,7 @@ class Scheduler(object):
         Deletes scheduled jobs
         """
         del self.jobs[:]
+        logger.info("jobs cleared")
 
     def cancel_job(self, job):
         """
@@ -147,6 +148,8 @@ class Scheduler(object):
                     if line != "" and line[0] != "#":
                         # skip empty lines and comments
                         self._load_crontab_line(rownum, line, job_func_func)
+                        # TODO support % sign inside command
+        logger.info(str(len(self.jobs)) + " jobs loaded from configuration file")
 
     def main_loop(self):
         """
