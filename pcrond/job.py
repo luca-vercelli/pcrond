@@ -5,7 +5,8 @@ logger = logging.getLogger('schedule')
 MONTH_OFFSET = {'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,
                 'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12}
 WEEK_OFFSET = {'sun': 0, 'mon': 1, 'tue': 2, 'wed': 3, 'thu': 4, 'fri': 5, 'sat': 6,
-               '0l': -7, '1l': -6, '2l': -5, '3l': -4, '4l': -3, '5l': -2, '6l': -1}
+               '0l': -7, '1l': -6, '2l': -5, '3l': -4, '4l': -3, '5l': -2, '6l': -1,
+               '0w': 7, '1w': 8, '2w': 9, '3w': 10, '4w': 11, '5w': 12, '6w': 13}
 ALIASES = {'@yearly':    '0 0 1 1 *',
            '@annually':  '0 0 1 1 *',
            '@monthly':   '0 0 1 * *',
@@ -20,13 +21,14 @@ class Job(object):
     """
     A periodic job as used by :class:`Scheduler`.
     """
-    def __init__(self, crontab, job_func=None, scheduler=None):
+    def __init__(self, crontab=None, job_func=None, scheduler=None):
         """
         Constructor
         :param crontab:
             string containing crontab pattern
             Its tokens may be either: 1 (if alias), 5 (without year token),
             6 (with year token)
+            if None, you should set it later
         :param job_func:
             the job 0-ary function to run
             if None, you should set it later
@@ -37,7 +39,10 @@ class Job(object):
         self.job_func = job_func
         self.scheduler = scheduler
         self.running = False
+        if crontab is not None:
+            self.set_crontab(crontab)
 
+    def set_crontab(self, crontab):
         if crontab is None:
             raise ValueError("given None crontab")
 
@@ -70,6 +75,10 @@ class Job(object):
         self.must_consider_wom = (self.allowed_dow is not None
                                   and len(self.allowed_dow) > 0
                                   and min(self.allowed_dow) < 0)
+
+        self.must_consider_w = (self.allowed_dow is not None
+                                and len(self.allowed_dow) > 0
+                                and min(self.allowed_dow) >= 7)
 
         self.crontab_pattern = crontab_lst
 
@@ -144,7 +153,7 @@ class Job(object):
             # here [["1"],["2","5"],["jul"], ["10","L"]]
             ranges = [[self._parse_token(w, offsets) for w in x] for x in ranges]
             if max([len(x) for x in ranges]) > 2:
-                raise ValueError("Wrong format '%s' - a string x-y-z is meaningless" % s)    
+                raise ValueError("Wrong format '%s' - a string x-y-z is meaningless" % s)
             ranges_xp = self._explode_ranges(ranges, minval, maxval)
             flatlist = [z for rng in ranges_xp for z in rng]
             return [False, set(flatlist)]

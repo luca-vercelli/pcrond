@@ -66,7 +66,7 @@ class SchedulerTests(unittest.TestCase):
         assert job._should_run_at(datetime.datetime(2019, 2, 28))
 
     def test_job_constructor_L_dow(self):
-        job = Job("* * * * 5l")      #5=friday, l=only the last one of the month
+        job = Job("* * * * 5l")      # 5=friday, l=only the last one of the month
         assert job.must_consider_wom
         assert job.allowed_every_dom
         assert not job.allowed_last_dom
@@ -100,6 +100,8 @@ class SchedulerTests(unittest.TestCase):
             Job("* 1;2;3 * *")
         with self.assertRaises(ValueError):
             Job("* @hourly")
+        with self.assertRaises(ValueError):
+            Job("* L * * *")
         # currently, hour=25 does not raise errors.
 
     def test_misconfigured_job_wont_break_scheduler(self):
