@@ -50,11 +50,10 @@ class Job(object):
 
         if crontab in ALIASES.keys():
             crontab = ALIASES[crontab]
-
-        if crontab == "@reboot":
+        elif crontab == "@reboot":
             import datetime
             now = datetime.datetime.now()
-            crontab = "%d %d * %d * %d" % (now.minute+1, now.hour, now.month, now.year)
+            crontab = "%d %d * %d * %d" % (now.minute + 1, now.hour, now.month, now.year)
 
         crontab_lst = crontab.split()
 
@@ -62,7 +61,7 @@ class Job(object):
             crontab_lst.append("*")
         if len(crontab_lst) != 6:
             raise ValueError(
-                "Each crontab pattern *must* contain either 5 or 6 items")
+                "Each crontab pattern *must* contain either 1, 5 or 6 items")
 
         # Easy ones:
         [self.allowed_every_min, self.allowed_min] = self._parse_min(crontab_lst[0])
@@ -92,7 +91,7 @@ class Job(object):
 
         self.crontab_pattern = crontab_lst
 
-    def _parse_token(self, token, offsets):
+    def _decode_token(self, token, offsets):
         """
         return int(token), possibly replacing token with offsets[token]
         offset keys are **lowercase**
@@ -113,27 +112,37 @@ class Job(object):
 
     def _split_tokens(self, s):
         """
-        given "1,2-5,jul,10-goofy" return [["1"],["2","5"],["jul"], ["10","goofy"]]
+        identify ranges in pattern
+        given "1,2-5/3,jul,10-goofy/6" return two lists, the singletons ['1', 'jul'] and the ranges [['10', 'goofy', 1], ['2', '5', 3]]
         * and @ not supported
+        :return: two lists, single items and ranges
         """
-        # here "1,2-5,jul,10-L"
+        # here '1,2-5/3,jul,10-goofy'
         ranges = s.split(",")
-        # here ["1","2-5","jul","10-L"]
-        ranges = [x.split("-") for x in ranges]
-        # here [["1"],["2","5"],["jul"], ["10","L"]]
-        return ranges
+        # here ranges == ['1', '2-5/3', 'jul', '10-goofy']
+        ranges = [x.split("/") for x in ranges]
+        # here ranges == [['1'], ['2-5', '3'], ['jul'], ['10-goofy']]
+        ranges = [[x[0].split("-")] + x[1:] for x in ranges]
+        # here ranges == [[['1']], [['2', '5'], '3'], [['jul']], [['10', 'goofy']]]
+        if max([len(x) for x in ranges]) > 2:
+            raise ValueError("Wrong format '%s' - a string x/y/z is meaningless" % s)
+        if max([len(x) for z in ranges for x in z]) > 2:
+            raise ValueError("Wrong format '%s' - a string x-y-z is meaningless" % s)
+        if [x for x in ranges if len(x) == 2 and len(x[0])==1]:
+            raise ValueError("Wrong format '%s' - a string y/z is meaningless, should be x-y/z" % s)
+        singletons = [w for x in ranges for z in x for w in z if len(z) == 1 and len(x) == 1]
+        # here singletons == ['1', 'jul']
+        ranges_no_step = [x[0] + [1] for x in ranges if len(x) == 1 and len(x[0]) == 2]
+        # here ranges_no_step == [['10', 'goofy', 1]]
+        try:
+            ranges_with_step = [x[0] + [int(x[1])] for x in ranges if len(x) == 2 and len(x[0]) == 2]
+        except ValueError:
+                raise ValueError(
+                    "Wrong format '%s' - expecting an integer after '/'" % s)
+        # here ranges_with_step == [['2', '5', 3]]
+        return (singletons, ranges_no_step + ranges_with_step)
 
-    def _explode_ranges(self, ranges, minval, maxval):
-        """
-        given [[1],[2,5],[7], [10,11]] return  [[1], [2,3,4,5], [7], [10, 11]]
-        """
-        ranges_xp = [x for x in ranges if len(x) == 1]
-        ranges_xp.extend([range(x[0], x[1]+1) for x in ranges if len(x) == 2 and x[0] <= x[1]])
-        ranges_xp.extend([range(x[0], maxval) for x in ranges if len(x) == 2 and x[0] > x[1]])
-        ranges_xp.extend([range(minval, x[1]+1) for x in ranges if len(x) == 2 and x[0] > x[1]])
-        return ranges_xp
-
-    def _parse_common(self, s, maxval, offsets={}, minval=0):
+    def _parse_common(self, s, maxval, offsets={}, minval=0, parser=None):
         """
         Generate a set of integers, corresponding to "allowed values".
         Work for minute, hours, weeks, month, ad days of week, because they
@@ -158,14 +167,19 @@ class Job(object):
             # DEBUG
             # import pdb
             # pdb.set_trace()
-            # here "1,2-5,jul,10-L"
-            ranges = self._split_tokens(s)
-            # here [["1"],["2","5"],["jul"], ["10","L"]]
-            ranges = [[self._parse_token(w, offsets) for w in x] for x in ranges]
-            if max([len(x) for x in ranges]) > 2:
-                raise ValueError("Wrong format '%s' - a string x-y-z is meaningless" % s)
-            ranges_xp = self._explode_ranges(ranges, minval, maxval)
-            flatlist = [z for rng in ranges_xp for z in rng]
+            # here s == '1,2-5/3,jul,10-nov'
+            (singletons, ranges) = self._split_tokens(s)
+            # here singletons == ['1', 'jul'], ranges == [['2', '5', 3], ['10', 'nov', 1]]
+            singletons = [self._decode_token(x, offsets) for x in singletons]
+            ranges = [[self._decode_token(rng[0], offsets), self._decode_token(rng[1], offsets), rng[2]]
+                      for rng in ranges]
+            # here singletons == [1, 7], ranges == [[2, 5, 3], [10, 11, 1]]
+            ranges = [range(rng[0], rng[1] + 1, rng[2]) for rng in ranges if (rng[0] <= rng[1])] \
+                     + [range(rng[0], maxval, rng[2]) for rng in ranges if rng[0] > rng[1]] \
+                     + [range(minval, rng[1] + 1, rng[2]) for rng in ranges if rng[0] > rng[1]] \
+            # here ranges == [range(2, 5, 3), range(10, 11, 1]]
+            flatlist = singletons + [z for rng in ranges for z in rng]
+            # here flatlist == [1, 7, 2, 3, 4, 5, 10, 11]
             return [False, set(flatlist)]
 
     def _parse_min(self, s):
@@ -178,7 +192,7 @@ class Job(object):
         return self._parse_common(s, 31, {"l": -1})
 
     def _parse_month(self, s):
-        return self._parse_common(s, 12, MONTH_OFFSET)
+        return self._parse_common(s, 12, MONTH_OFFSET, 1)
 
     def _parse_day_in_week(self, s):
         return self._parse_common(s, 7, WEEK_OFFSET)

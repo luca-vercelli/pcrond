@@ -20,6 +20,27 @@ class SchedulerTests(unittest.TestCase):
     def setUp(self):
         scheduler.clear()
 
+    def test_split_tokens(self):
+        job = Job()
+        with self.assertRaises(ValueError):
+            job._split_tokens("1/2/3")
+        with self.assertRaises(ValueError):
+            job._split_tokens("1-2-3")
+        with self.assertRaises(ValueError):
+            job._split_tokens("1/3")
+        with self.assertRaises(ValueError):
+            job._split_tokens("1-2/goofy")
+        (s,r) = job._split_tokens("1,2-5/3,jul,10-goofy/6")
+        assert s == ['1', 'jul']
+        assert r == [['2','5', 3], ['10', 'goofy', 6]]
+
+    def test_decode_token(self):
+        job = Job()
+        assert job._decode_token("1234", {}) == 1234
+        assert job._decode_token("goofy", {'goofy': 1234}) == 1234
+        with self.assertRaises(ValueError):
+            job._decode_token("goofy", {})
+
     def test_job_constructor_basic(self):
         job = Job("* 4 * * *")
         ###
