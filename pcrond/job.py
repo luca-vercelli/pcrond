@@ -113,7 +113,8 @@ class Job(object):
     def _split_tokens(self, s):
         """
         identify ranges in pattern
-        given "1,2-5/3,jul,10-goofy/6" return two lists, the singletons ['1', 'jul'] and the ranges [['10', 'goofy', 1], ['2', '5', 3]]
+        given "1,2-5/3,jul,10-goofy/6" return two lists, the singletons ['1', 'jul']
+        and the ranges [['10', 'goofy', 1], ['2', '5', 3]]
         * and @ not supported
         :return: two lists, single items and ranges
         """
@@ -128,7 +129,7 @@ class Job(object):
             raise ValueError("Wrong format '%s' - a string x/y/z is meaningless" % s)
         if max([len(x) for z in ranges for x in z]) > 2:
             raise ValueError("Wrong format '%s' - a string x-y-z is meaningless" % s)
-        if [x for x in ranges if len(x) == 2 and len(x[0])==1]:
+        if [x for x in ranges if len(x) == 2 and len(x[0]) == 1]:
             raise ValueError("Wrong format '%s' - a string y/z is meaningless, should be x-y/z" % s)
         singletons = [w for x in ranges for z in x for w in z if len(z) == 1 and len(x) == 1]
         # here singletons == ['1', 'jul']
@@ -137,8 +138,7 @@ class Job(object):
         try:
             ranges_with_step = [x[0] + [int(x[1])] for x in ranges if len(x) == 2 and len(x[0]) == 2]
         except ValueError:
-                raise ValueError(
-                    "Wrong format '%s' - expecting an integer after '/'" % s)
+            raise ValueError("Wrong format '%s' - expecting an integer after '/'" % s)
         # here ranges_with_step == [['2', '5', 3]]
         return (singletons, ranges_no_step + ranges_with_step)
 
@@ -174,9 +174,9 @@ class Job(object):
             ranges = [[self._decode_token(rng[0], offsets), self._decode_token(rng[1], offsets), rng[2]]
                       for rng in ranges]
             # here singletons == [1, 7], ranges == [[2, 5, 3], [10, 11, 1]]
-            ranges = [range(rng[0], rng[1] + 1, rng[2]) for rng in ranges if (rng[0] <= rng[1])] \
-                     + [range(rng[0], maxval, rng[2]) for rng in ranges if rng[0] > rng[1]] \
-                     + [range(minval, rng[1] + 1, rng[2]) for rng in ranges if rng[0] > rng[1]] \
+            ranges = [range(rng[0], rng[1] + 1, rng[2]) for rng in ranges if (rng[0] <= rng[1])] + \
+                     [range(rng[0], maxval, rng[2]) for rng in ranges if rng[0] > rng[1]] + \
+                     [range(minval, rng[1] + 1, rng[2]) for rng in ranges if rng[0] > rng[1]] \
             # here ranges == [range(2, 5, 3), range(10, 11, 1]]
             flatlist = singletons + [z for rng in ranges for z in rng]
             # here flatlist == [1, 7, 2, 3, 4, 5, 10, 11]
