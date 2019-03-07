@@ -39,12 +39,12 @@ class SchedulerTests(unittest.TestCase):
         assert job._decode_token("1234", {}) == "1234"
         assert job._decode_token("goofy", {'goofy': "1234"}) == "1234"
         assert job._decode_token("goofy", {'goofy': 1234}) == 1234
- 
+
     def test_get_num_wom(self):
         job = Job()
-        assert job.get_num_wom(d(2019, 3, 7)) == 1      #first thursday of month
-        assert job.get_num_wom(d(2019, 3, 8)) == 2      #second friday of month
-        assert job.get_num_wom(d(2019, 3, 31)) == 5     #fifth sunday of month
+        assert job.get_num_wom(d(2019, 3, 7)) == 1      # first thursday of month
+        assert job.get_num_wom(d(2019, 3, 8)) == 2      # second friday of month
+        assert job.get_num_wom(d(2019, 3, 31)) == 5     # fifth sunday of month
 
     def test_is_last_wom(self):
         job = Job()

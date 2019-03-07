@@ -72,7 +72,7 @@ class Job(object):
         # L = last day
         # 15W= last working day before 15th, or the first one after if none
         [self.allowed_every_dom, self.allowed_dom, self.allowed_wdom] = self._parse_day_in_month(crontab_lst[2])
-        
+
         # Day of week.
         # 5L = last friday of the month
         # 5#2 = second friday of the month
@@ -170,7 +170,7 @@ class Job(object):
             # here singletons == [1, 7], ranges == [[2, 5, 3], [10, 11, 1]]
             ranges = [range(rng[0], rng[1] + 1, rng[2]) for rng in ranges if (rng[0] <= rng[1])] + \
                      [range(rng[0], maxval, rng[2]) for rng in ranges if rng[0] > rng[1]] + \
-                     [range(minval, rng[1] + 1, rng[2]) for rng in ranges if rng[0] > rng[1]] \
+                     [range(minval, rng[1] + 1, rng[2]) for rng in ranges if rng[0] > rng[1]]
             # here ranges == [range(2, 5, 3), range(10, 11, 1]]
             flatlist = singletons + [z for rng in ranges for z in rng]
             # here flatlist == [1, 7, 2, 3, 4, 5, 10, 11]
@@ -189,7 +189,7 @@ class Job(object):
             return ([x for x in singletons if x[-1] != 'w'], ranges)
 
         def only_w(singletons, ranges):
-            return ([x[:-1] for x in singletons if  x[-1] == 'w'], [])
+            return ([x[:-1] for x in singletons if x[-1] == 'w'], [])
 
         [every, dom] = self._parse_common(s, 31, {'l': '-1'}, 1, ignore_w)
         if every:
