@@ -228,6 +228,29 @@ class Job(object):
         """ true if given date is in the last week of the month """
         return now.day > self.get_last_dom(now) - 7
 
+    def _check_w(self, now):
+        """ used for checking 15w """
+        w = now.weekday()
+        if w >= 5:
+            return False
+        d = now.day
+        if d in self.allowed_wdom:
+            return True
+        if w == 0:
+            if (d - 1) in self.allowed_wdom:
+                return True
+            # 1w matches monday, 3rd
+            if d == 3 and 1 in self.allowed_wdom:
+                return True
+        elif w == 4:
+            if (d + 1) in self.allowed_wdom:
+                return True
+            # 31w matches friday, 29th
+            l = self.get_last_dom(now)
+            if d == l - 2 and l in self.allowed_wdom:
+                return True
+        return False
+
     def should_run(self):
         """
         :return: ``True`` if the job should be run now.
@@ -254,7 +277,8 @@ class Job(object):
                          and self.is_last_wom(now)))
                 and (self.allowed_every_dom
                      or now.day in self.allowed_dom
-                     or (self.allowed_last_dom and now.day == self.get_last_dom(now)))
+                     or (self.allowed_last_dom and now.day == self.get_last_dom(now))
+                     or (self.allowed_wdom and self._check_w(now)))
                 )
 
     def run(self):

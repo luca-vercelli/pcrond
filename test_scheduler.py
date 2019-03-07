@@ -107,16 +107,18 @@ class SchedulerTests(unittest.TestCase):
         assert job.allowed_wdom == set([15])
         assert job._should_run_at(d(2019, 3, 15))       # was fri
         assert not job._should_run_at(d(2018, 12, 15))  # was sat
-        assert job._should_run_at(d(2019, 3, 14))       # was fri
+        assert job._should_run_at(d(2018, 12, 14))      # was fri   *
         assert not job._should_run_at(d(2018, 7, 15))   # was sun
         assert job._should_run_at(d(2018, 7, 16))       # was mon
+        ###
         job = Job("* * 1w * *")
         assert not job.allowed_every_dom
         assert not job.allowed_last_dom
         assert job.allowed_dom == set()
         assert job.allowed_wdom == set([1])
         assert job._should_run_at(d(2019, 3, 1))        # was fri
-        assert not job._should_run_at(d(2019, 6, 3))    # was mon
+        assert not job._should_run_at(d(2019, 6, 1))    # was sat
+        assert job._should_run_at(d(2019, 6, 3))        # was mon
 
     def test_job_constructor_L_dow(self):
         job = Job("* * * * 5l")      # 5=friday, l=only the last one of the month
