@@ -128,6 +128,19 @@ class Scheduler(object):
             print("Error at line %d, cannot parse pattern" % rownum)
             return None
 
+    def _split_input_line(self, s):
+        """
+        Command is split in command and stdin using %, not %%
+        :return: two strings, command and stdin
+        """
+        # s == aaaa%%bbbbbb%cccc%dd%%ee
+        pieces = [x.split('%') for x in s.split('%%')]
+        # pieces == [[aaaa],[bbbbbb,cccc,dd],[ee]]
+        rejoin = "%".join(["\n".join(x) for x in pieces])
+        # rejoin == aaaa%bbbbbb\ncccc\ndd%ee
+        return rejoin.split('\n', 1)
+        # lines == [aaaa%bbbbbb,ccc\ndd%ee]
+
     def load_crontab_file(self, crontab_file, clear=True, job_func_func=std_launch_func):
         """
         Read crontab file, create corresponding jobs in this scheduler
@@ -147,8 +160,9 @@ class Scheduler(object):
                     line = line.strip()
                     if line != "" and line[0] != "#":
                         # skip empty lines and comments
-                        self._load_crontab_line(rownum, line, job_func_func)
-                        # TODO support % sign inside command
+                        pieces = self._split_input_line(line)
+                        self._load_crontab_line(rownum, pieces[0], job_func_func)
+                        # TODO support % sign inside command, should consider pieces[1] if any
         logger.info(str(len(self.jobs)) + " jobs loaded from configuration file")
 
     def main_loop(self):

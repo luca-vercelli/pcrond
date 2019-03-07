@@ -212,6 +212,10 @@ class SchedulerTests(unittest.TestCase):
         scheduler.run_pending()
         assert test_obj['modified'] is False
 
+    def test_split_input_line(self):
+        assert scheduler._split_input_line('aaaa%%bbbbbb%cccc%dd%%ee') == ['aaaa%bbbbbb', 'cccc\ndd%ee']
+        assert scheduler._split_input_line('aaaa%%bbbbbb') == ['aaaa%bbbbbb']
+
     def test_load_crontab(self):
         """ load test crontab file """
         import os
