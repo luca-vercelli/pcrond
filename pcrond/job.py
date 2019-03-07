@@ -228,13 +228,6 @@ class Job(object):
         """ true if given date is in the last week of the month """
         return now.day > self.get_last_dom(now) - 7
 
-    def __lt__(self, other):
-        """
-        Periodic Jobs are sortable based on the scheduled time they
-        run next.
-        """
-        return self.next_run < other.next_run
-
     def should_run(self):
         """
         :return: ``True`` if the job should be run now.
