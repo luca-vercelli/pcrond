@@ -19,26 +19,25 @@ def modify_obj(obj):
 class SchedulerTests(unittest.TestCase):
     def setUp(self):
         scheduler.clear()
+        self.parser = Parser()
 
     def test_split_tokens(self):
-        job = Job()
         with self.assertRaises(ValueError):
-            job._split_tokens("1/2/3")
+            self.parser.split_tokens("1/2/3")
         with self.assertRaises(ValueError):
-            job._split_tokens("1-2-3")
+            self.parser.split_tokens("1-2-3")
         with self.assertRaises(ValueError):
-            job._split_tokens("1/3")
+            self.parser.split_tokens("1/3")
         with self.assertRaises(ValueError):
-            job._split_tokens("1-2/goofy")
-        (s, r) = job._split_tokens("1,2-5/3,jul,10-goofy/6")
+            self.parser.split_tokens("1-2/goofy")
+        (s, r) = self.parser.split_tokens("1,2-5/3,jul,10-goofy/6")
         assert s == ['1', 'jul']
         assert r == [['2', '5', 3], ['10', 'goofy', 6]]
 
     def test_decode_token(self):
-        job = Job()
-        assert job._decode_token("1234", {}) == "1234"
-        assert job._decode_token("goofy", {'goofy': "1234"}) == "1234"
-        assert job._decode_token("goofy", {'goofy': 1234}) == 1234
+        assert self.parser.decode_token("1234", {}) == "1234"
+        assert self.parser.decode_token("goofy", {'goofy': "1234"}) == "1234"
+        assert self.parser.decode_token("goofy", {'goofy': 1234}) == 1234
 
     def test_get_num_wom(self):
         job = Job()
