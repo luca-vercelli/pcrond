@@ -80,14 +80,14 @@ class Parser:
                       for rng in ranges]
             if callback is not None:
                 (singletons, ranges) = callback(singletons, ranges)
-            singletons = map(int, singletons)           # may raise ValueError
-            ranges = [map(int, rng) for rng in ranges]   # may raise ValueError
+            singletons = list(map(int, singletons))           # may raise ValueError
+            ranges = [list(map(int, rng)) for rng in ranges]   # may raise ValueError
             # here singletons == [1, 7], ranges == [[2, 5, 3], [10, 11, 1]]
             ranges = [range(rng[0], rng[1] + 1, rng[2]) for rng in ranges if (rng[0] <= rng[1])] + \
                      [range(rng[0], maxval + 1, rng[2]) for rng in ranges if rng[0] > rng[1]] + \
                      [range(minval, rng[1] + 1, rng[2]) for rng in ranges if rng[0] > rng[1]]
             # here ranges == [range(2, 5, 3), range(10, 11, 1]]
-            flatlist = list(singletons) + [z for rng in ranges for z in rng]
+            flatlist = singletons + [z for rng in ranges for z in rng]
             # here flatlist == [1, 7, 2, 3, 4, 5, 10, 11]
             return set(flatlist)
 
