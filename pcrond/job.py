@@ -129,8 +129,7 @@ class Job(object):
         Generate a set of integers, corresponding to "allowed values".
         Work for minute, hours, weeks, month, ad days of week, because they
         are all "similar".
-        Does not work very well for years and days of month
-        Supported formats: "*", "*/3", "1,2,3", "L", "1,2-5,jul,10-L", "50-10"
+        Does not work for '*'
         :param minval, maxval:
             es. 0-59 for minutes, 1-12 for month, ...
         :param offsets:
@@ -140,14 +139,12 @@ class Job(object):
         :param callback:
             a 2-ary function that pre-elaborates singletons and ranges
         """
-        if s == "*":
-            return [True, []]           # every minute
-        elif s.startswith("*/"):        # every tot minutes
+        if s.startswith("*/"):        # every tot minutes
             try:
                 step = int(s[2:])
             except ValueError:
                 raise ValueError("Wrong format '%s' - expecting an integer after '*/'" % s)
-            return [False, set(range(minval, maxval + 1, step))]
+            return set(range(minval, maxval + 1, step))
         else:                           # at given minutes
             # here s == '1,2-5/3,jul,10-nov'
             (singletons, ranges) = self._split_tokens(s)
@@ -166,15 +163,22 @@ class Job(object):
             # here ranges == [range(2, 5, 3), range(10, 11, 1]]
             flatlist = singletons + [z for rng in ranges for z in rng]
             # here flatlist == [1, 7, 2, 3, 4, 5, 10, 11]
-            return [False, set(flatlist)]
+            return set(flatlist)
 
     def _parse_min(self, s):
-        return self._parse_common(s, 0, 59)
+        if s == '*':
+            return [True, None]
+        return [False, self._parse_common(s, 0, 59)]
 
     def _parse_hour(self, s):
-        return self._parse_common(s, 0, 23)
+        if s == '*':
+            return [True, None]
+        return [False, self._parse_common(s, 0, 23)]
 
     def _parse_day_in_month(self, s):
+        if s == '*':
+            return [True, None, None]
+
         def ignore_w(singletons, ranges):
             if [x for x in ranges for z in x if 'w' in x]:
                 raise ValueError("Cannot use W pattern inside ranges")
@@ -183,18 +187,19 @@ class Job(object):
         def only_w(singletons, ranges):
             return ([x[:-1] for x in singletons if x[-1] == 'w'], [])
 
-        [every, dom] = self._parse_common(s, 1, 31, {'l': '-1'}, ignore_w)
-        if every:
-            wdom = None
-        else:
-            [every, wdom] = self._parse_common(s, 1, 31, {}, only_w)
+        dom = self._parse_common(s, 1, 31, {'l': '-1'}, ignore_w)
+        wdom = self._parse_common(s, 1, 31, {}, only_w)
 
-        return [every, dom, wdom]
+        return [False, dom, wdom]
 
     def _parse_month(self, s):
-        return self._parse_common(s, 1, 13, MONTH_OFFSET)
+        if s == '*':
+            return [True, None]
+        return [False, self._parse_common(s, 1, 13, MONTH_OFFSET)]
 
     def _parse_day_in_week(self, s):
+        if s == '*':
+            return [True, None, None, None]
         def only_plain(singletons, ranges):
             if [x for x in ranges for z in x if ('l' in x or '#' in x)]:
                 raise ValueError("Cannot use L or # pattern inside ranges")
@@ -213,20 +218,20 @@ class Job(object):
         def cron2py(x):
             return (x + 6) % 7
 
-        [every, dow] = self._parse_common(s, 0, 6, WEEK_OFFSET, only_plain)
-        if s == '*':
-            return [True, None, None, None]
+        dow = self._parse_common(s, 0, 6, WEEK_OFFSET, only_plain)
         dow = set(map(cron2py, dow))
-        [every, dow_l] = self._parse_common(s, 0, 6, WEEK_OFFSET, only_l)
+        dow_l = self._parse_common(s, 0, 6, WEEK_OFFSET, only_l)
         dow_l = set(map(cron2py, dow_l))
         dow_s = {}
         for n in range(1, 6):
-            [every, t] = self._parse_common(s, 0, 6, WEEK_OFFSET, only_sharp(n))
+            t = self._parse_common(s, 0, 6, WEEK_OFFSET, only_sharp(n))
             dow_s[n] = set(map(cron2py, t))
-        return [every, dow, dow_l, dow_s]
+        return [False, dow, dow_l, dow_s]
 
     def _parse_year(self, s):
-        return self._parse_common(s, 1970, 2099)
+        if s == '*':
+            return [True, None]
+        return [False, self._parse_common(s, 1970, 2099)]
 
     def get_last_dom(self, now):
         """ get last day in month determined by given datetime """
