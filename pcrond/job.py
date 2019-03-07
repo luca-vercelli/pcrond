@@ -188,7 +188,7 @@ class Job(object):
             wdom = None
         else:
             [every, wdom] = self._parse_common(s, 1, 31, {}, only_w)
-            
+
         return [every, dom, wdom]
 
     def _parse_month(self, s):
@@ -206,12 +206,13 @@ class Job(object):
         def only_sharp(n):
             suffix = '#' + str(n)
             lens = len(suffix)
-            return lambda singletons, ranges:([x[:-lens] for x in singletons if x.endswith(suffix)], [])
+            return lambda singletons, ranges: ([x[:-lens] for x in singletons if x.endswith(suffix)], [])
 
         # warning: in Python, Monday is 0 and Sunday is 6
         #          in cron, Sunday=0 and Saturday is 6
-        cron2py = lambda x:(x + 6) % 7
-        
+        def cron2py(x):
+            return (x + 6) % 7
+
         [every, dow] = self._parse_common(s, 0, 6, WEEK_OFFSET, only_plain)
         if s == '*':
             return [True, None, None, None]
@@ -262,8 +263,8 @@ class Job(object):
             if (d + 1) in self.allowed_wdom:
                 return True
             # 31w matches friday, 29th
-            l = self.get_last_dom(now)
-            if d == l - 2 and l in self.allowed_wdom:
+            lday = self.get_last_dom(now)
+            if d == lday - 2 and lday in self.allowed_wdom:
                 return True
         return False
 
