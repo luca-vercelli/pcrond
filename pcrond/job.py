@@ -136,7 +136,7 @@ class Job(object):
         # here ranges_with_step == [['2', '5', 3]]
         return (singletons, ranges_no_step + ranges_with_step)
 
-    def _parse_common(self, s, maxval, offsets={}, minval=0, callback=None):
+    def _parse_common(self, s, minval, maxval, offsets={}, callback=None):
         """
         Generate a set of integers, corresponding to "allowed values".
         Work for minute, hours, weeks, month, ad days of week, because they
@@ -148,7 +148,7 @@ class Job(object):
         :param offsets:
             a dict mapping names (es. "mar") to their offsets (es. 2).
         :param minval:
-            es. 1 for days and months
+            es. 0 for hours and minutes, 1 for days and months
         :param callback:
             a 2-ary function that pre-elaborates singletons and ranges
         """
@@ -181,10 +181,10 @@ class Job(object):
             return [False, set(flatlist)]
 
     def _parse_min(self, s):
-        return self._parse_common(s, 60)
+        return self._parse_common(s, 0, 60)
 
     def _parse_hour(self, s):
-        return self._parse_common(s, 24)
+        return self._parse_common(s, 0, 24)
 
     def _parse_day_in_month(self, s):
         def ignore_w(singletons, ranges):
@@ -195,21 +195,21 @@ class Job(object):
         def only_w(singletons, ranges):
             return ([x[:-1] for x in singletons if x[-1] == 'w'], [])
 
-        [every, dom] = self._parse_common(s, 31, {'l': '-1'}, 1, ignore_w)
+        [every, dom] = self._parse_common(s, 1, 31, {'l': '-1'}, ignore_w)
         if every:
             wdom = None
         else:
-            [every, wdom] = self._parse_common(s, 31, {}, 1, only_w)
+            [every, wdom] = self._parse_common(s, 1, 31, {}, only_w)
         return [every, dom, wdom]
 
     def _parse_month(self, s):
-        return self._parse_common(s, 12, MONTH_OFFSET, 1)
+        return self._parse_common(s, 0, 12, MONTH_OFFSET)
 
     def _parse_day_in_week(self, s):
-        return self._parse_common(s, 7, WEEK_OFFSET)
+        return self._parse_common(s, 0, 7, WEEK_OFFSET)
 
     def _parse_year(self, s):
-        return self._parse_common(s, 2099, minval=1970)
+        return self._parse_common(s, 1970, 2099)
 
     def get_last_dom(self, now):
         """ get last day in month determined by given datetime """
@@ -255,10 +255,10 @@ class Job(object):
                 and (self.allowed_every_hour or now.hour in self.allowed_hours)
                 and (self.allowed_every_min or now.minute in self.allowed_min)
                 and (self.allowed_every_dow
-                     or (now.weekday() in self.allowed_dow
+                     or (now.weekday() in self.allowed_dow)
                      or (self.must_consider_wom
                          and now.weekday() in self.allowed_dowl
-                         and self.is_last_wom(now))))
+                         and self.is_last_wom(now)))
                 and (self.allowed_every_dom
                      or now.day in self.allowed_dom
                      or (self.allowed_last_dom and now.day == self.get_last_dom(now)))
