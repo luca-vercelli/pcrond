@@ -70,15 +70,13 @@ class Job(object):
         # Day of month.
         # L = last day
         # 15W= nearest working day around the 15th, in the same month
-        [self.allowed_every_dom, self.allowed_dom, self.allowed_wdom] = self._parse_day_in_month(crontab_lst[2])
+        [self.allowed_every_dom, self.allowed_dom, self.allowed_last_dom, self.allowed_wdom] = self._parse_day_in_month(crontab_lst[2])
 
         # Day of week.
         # 5L = last friday of the month
         # 5#2 = second friday of the month
         [self.allowed_every_dow, self.allowed_dow, self.allowed_dowl, self.allowed_dow_sharp] = \
             self._parse_day_in_week(crontab_lst[4])
-
-        self.allowed_last_dom = (-1 in self.allowed_dom)
 
         self.crontab_pattern = crontab_lst
 
@@ -177,7 +175,7 @@ class Job(object):
 
     def _parse_day_in_month(self, s):
         if s == '*':
-            return [True, None, None]
+            return [True, None, False, None]
 
         def ignore_w(singletons, ranges):
             if [x for x in ranges for z in x if 'w' in x]:
@@ -190,7 +188,7 @@ class Job(object):
         dom = self._parse_common(s, 1, 31, {'l': '-1'}, ignore_w)
         wdom = self._parse_common(s, 1, 31, {}, only_w)
 
-        return [False, dom, wdom]
+        return [False, dom, -1 in dom, wdom]
 
     def _parse_month(self, s):
         if s == '*':
