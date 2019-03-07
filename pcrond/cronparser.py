@@ -87,7 +87,7 @@ class Parser:
                      [range(rng[0], maxval + 1, rng[2]) for rng in ranges if rng[0] > rng[1]] + \
                      [range(minval, rng[1] + 1, rng[2]) for rng in ranges if rng[0] > rng[1]]
             # here ranges == [range(2, 5, 3), range(10, 11, 1]]
-            flatlist = singletons + [z for rng in ranges for z in rng]
+            flatlist = list(singletons) + [z for rng in ranges for z in rng]
             # here flatlist == [1, 7, 2, 3, 4, 5, 10, 11]
             return set(flatlist)
 
@@ -150,6 +150,7 @@ class Parser:
         """
         if s == '*':
             return [True, None, None, None]
+
         def only_plain(singletons, ranges):
             if [x for x in ranges for z in x if ('l' in x or '#' in x)]:
                 raise ValueError("Cannot use L or # pattern inside ranges")
