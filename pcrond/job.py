@@ -4,8 +4,7 @@ logger = logging.getLogger('schedule')
 
 MONTH_OFFSET = {'jan': '1', 'feb': '2', 'mar': '3', 'apr': '4', 'may': '5', 'jun': '6',
                 'jul': '7', 'aug': '8', 'sep': '9', 'oct': '10', 'nov': '11', 'dec': '12'}
-WEEK_OFFSET = {'sun': '0', 'mon': '1', 'tue': '2', 'wed': '3', 'thu': '4', 'fri': '5', 'sat': '6',
-               '0l': '-7', '1l': '-6', '2l': '-5', '3l': '-4', '4l': '-3', '5l': '-2', '6l': '-1'}
+WEEK_OFFSET = {'sun': '0', 'mon': '1', 'tue': '2', 'wed': '3', 'thu': '4', 'fri': '5', 'sat': '6'}
 ALIASES = {'@yearly':    '0 0 1 1 *',
            '@annually':  '0 0 1 1 *',
            '@monthly':   '0 0 1 * *',
@@ -70,27 +69,16 @@ class Job(object):
 
         # Day of month.
         # L = last day
-        # 15W= last working day before 15th, or the first one after if none
+        # 15W= nearest working day around the 15th, in the same month
         [self.allowed_every_dom, self.allowed_dom, self.allowed_wdom] = self._parse_day_in_month(crontab_lst[2])
 
         # Day of week.
         # 5L = last friday of the month
         # 5#2 = second friday of the month
-        [self.allowed_every_dow, self.allowed_dow] = self._parse_day_in_week(crontab_lst[4])
+        [self.allowed_every_dow, self.allowed_dow, self.allowed_dowl, self.allowed_dow_sharp] = \
+            self._parse_day_in_week(crontab_lst[4])
 
         self.allowed_last_dom = (-1 in self.allowed_dom)
-
-        self.must_consider_wom = (self.allowed_dow is not None
-                                  and len(self.allowed_dow) > 0
-                                  and min(self.allowed_dow) < 0)
-
-        # warning: in Python, Monday is 0 and Sunday is 6
-        #          in cron, Sunday=0
-        if self.allowed_dow:
-            t1 = set([(x + 6) % 7 for x in self.allowed_dow if x >= 0])
-            t2 = set([(x + 13) % 7 for x in self.allowed_dow if x < 0])
-            self.allowed_dow = t1
-            self.allowed_dowl = t2
 
         self.crontab_pattern = crontab_lst
 
@@ -143,8 +131,8 @@ class Job(object):
         are all "similar".
         Does not work very well for years and days of month
         Supported formats: "*", "*/3", "1,2,3", "L", "1,2-5,jul,10-L", "50-10"
-        :param maxval:
-            es. 60 for minutes, 12 for month, ...
+        :param minval, maxval:
+            es. 0-59 for minutes, 1-12 for month, ...
         :param offsets:
             a dict mapping names (es. "mar") to their offsets (es. 2).
         :param minval:
@@ -159,7 +147,7 @@ class Job(object):
                 step = int(s[2:])
             except ValueError:
                 raise ValueError("Wrong format '%s' - expecting an integer after '*/'" % s)
-            return [False, set(range(minval, maxval, step))]
+            return [False, set(range(minval, maxval + 1, step))]
         else:                           # at given minutes
             # here s == '1,2-5/3,jul,10-nov'
             (singletons, ranges) = self._split_tokens(s)
@@ -173,7 +161,7 @@ class Job(object):
             ranges = [map(int, rng) for rng in ranges]   # may raise ValueError
             # here singletons == [1, 7], ranges == [[2, 5, 3], [10, 11, 1]]
             ranges = [range(rng[0], rng[1] + 1, rng[2]) for rng in ranges if (rng[0] <= rng[1])] + \
-                     [range(rng[0], maxval, rng[2]) for rng in ranges if rng[0] > rng[1]] + \
+                     [range(rng[0], maxval + 1, rng[2]) for rng in ranges if rng[0] > rng[1]] + \
                      [range(minval, rng[1] + 1, rng[2]) for rng in ranges if rng[0] > rng[1]]
             # here ranges == [range(2, 5, 3), range(10, 11, 1]]
             flatlist = singletons + [z for rng in ranges for z in rng]
@@ -181,10 +169,10 @@ class Job(object):
             return [False, set(flatlist)]
 
     def _parse_min(self, s):
-        return self._parse_common(s, 0, 60)
+        return self._parse_common(s, 0, 59)
 
     def _parse_hour(self, s):
-        return self._parse_common(s, 0, 24)
+        return self._parse_common(s, 0, 23)
 
     def _parse_day_in_month(self, s):
         def ignore_w(singletons, ranges):
@@ -200,13 +188,41 @@ class Job(object):
             wdom = None
         else:
             [every, wdom] = self._parse_common(s, 1, 31, {}, only_w)
+            
         return [every, dom, wdom]
 
     def _parse_month(self, s):
-        return self._parse_common(s, 0, 12, MONTH_OFFSET)
+        return self._parse_common(s, 1, 13, MONTH_OFFSET)
 
     def _parse_day_in_week(self, s):
-        return self._parse_common(s, 0, 7, WEEK_OFFSET)
+        def only_plain(singletons, ranges):
+            if [x for x in ranges for z in x if ('l' in x or '#' in x)]:
+                raise ValueError("Cannot use L or # pattern inside ranges")
+            return ([x for x in singletons if not ('l' in x or '#' in x)], ranges)
+
+        def only_l(singletons, ranges):
+            return ([x[:-1] for x in singletons if x[-1] == 'l'], [])
+
+        def only_sharp(n):
+            suffix = '#' + str(n)
+            lens = len(suffix)
+            return lambda singletons, ranges:([x[:-lens] for x in singletons if x.endswith(suffix)], [])
+
+        # warning: in Python, Monday is 0 and Sunday is 6
+        #          in cron, Sunday=0 and Saturday is 6
+        cron2py = lambda x:(x + 6) % 7
+        
+        [every, dow] = self._parse_common(s, 0, 6, WEEK_OFFSET, only_plain)
+        if s == '*':
+            return [True, None, None, None]
+        dow = set(map(cron2py, dow))
+        [every, dow_l] = self._parse_common(s, 0, 6, WEEK_OFFSET, only_l)
+        dow_l = set(map(cron2py, dow_l))
+        dow_s = {}
+        for n in range(1, 6):
+            [every, t] = self._parse_common(s, 0, 6, WEEK_OFFSET, only_sharp(n))
+            dow_s[n] = set(map(cron2py, t))
+        return [every, dow, dow_l, dow_s]
 
     def _parse_year(self, s):
         return self._parse_common(s, 1970, 2099)
@@ -265,16 +281,20 @@ class Job(object):
         """
         # warning: in Python, Monday is 0 and Sunday is 6
         #          in cron, Sunday=0
+        w = now.weekday()
+        num_wom = self.get_num_wom(now)
         return (not self.running
                 and (self.allowed_every_year or now.year in self.allowed_years)
                 and (self.allowed_every_month or now.month in self.allowed_months)
                 and (self.allowed_every_hour or now.hour in self.allowed_hours)
                 and (self.allowed_every_min or now.minute in self.allowed_min)
                 and (self.allowed_every_dow
-                     or (now.weekday() in self.allowed_dow)
-                     or (self.must_consider_wom
-                         and now.weekday() in self.allowed_dowl
-                         and self.is_last_wom(now)))
+                     or (w in self.allowed_dow)
+                     or (self.allowed_dowl
+                         and w in self.allowed_dowl
+                         and self.is_last_wom(now))
+                     or (self.allowed_dow_sharp[num_wom]
+                         and w in self.allowed_dow_sharp[num_wom]))
                 and (self.allowed_every_dom
                      or now.day in self.allowed_dom
                      or (self.allowed_last_dom and now.day == self.get_last_dom(now))

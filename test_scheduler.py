@@ -122,7 +122,6 @@ class SchedulerTests(unittest.TestCase):
 
     def test_job_constructor_L_dow(self):
         job = Job("* * * * 5l")      # 5=friday, l=only the last one of the month
-        assert job.must_consider_wom
         assert job.allowed_every_dom
         assert not job.allowed_last_dom
         assert not job.allowed_every_dow
@@ -131,6 +130,22 @@ class SchedulerTests(unittest.TestCase):
         assert job._should_run_at(d(2019, 3, 29))       # was fri
         assert not job._should_run_at(d(2019, 3, 28))   # was thu
         assert not job._should_run_at(d(2019, 3, 8))    # was fri
+
+    def test_job_constructor_dow_sharp(self):
+        job = Job("* * * * 5#2")      # second friday in the month
+        assert job.allowed_every_dom
+        assert not job.allowed_last_dom
+        assert not job.allowed_every_dow
+        assert not job.allowed_dow
+        assert not job.allowed_dowl
+        assert 2 in job.allowed_dow_sharp.keys()
+        assert job.allowed_dow_sharp[2] == set([4])      # 5 in cron, 4 in python
+        assert not job._should_run_at(d(2019, 3, 1))     # was fri
+        assert job._should_run_at(d(2019, 3, 8))         # was fri
+        assert not job._should_run_at(d(2019, 3, 15))    # was fri
+        assert not job._should_run_at(d(2019, 3, 22))    # was fri
+        assert not job._should_run_at(d(2019, 3, 29))    # was fri
+        assert not job._should_run_at(d(2019, 3, 28))    # was thu
 
     def test_job_constructor_alias(self):
         job = Job("@hourly")
