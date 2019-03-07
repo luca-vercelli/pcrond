@@ -30,9 +30,9 @@ class SchedulerTests(unittest.TestCase):
             job._split_tokens("1/3")
         with self.assertRaises(ValueError):
             job._split_tokens("1-2/goofy")
-        (s,r) = job._split_tokens("1,2-5/3,jul,10-goofy/6")
+        (s, r) = job._split_tokens("1,2-5/3,jul,10-goofy/6")
         assert s == ['1', 'jul']
-        assert r == [['2','5', 3], ['10', 'goofy', 6]]
+        assert r == [['2', '5', 3], ['10', 'goofy', 6]]
 
     def test_decode_token(self):
         job = Job()
