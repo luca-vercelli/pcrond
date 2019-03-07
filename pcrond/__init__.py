@@ -4,6 +4,7 @@
 # pylint: disable-msg=F401
 from .job import Job
 from .sched import Scheduler
+from .cronparser import Parser
 
 # default instance
 scheduler = Scheduler()

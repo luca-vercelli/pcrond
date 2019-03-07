@@ -1,6 +1,6 @@
 # most of the code here comes from https://github.com/dbader/schedule
 
-from .job import ALIASES, Job
+from .job import Job, ALIASES
 import logging
 import time
 

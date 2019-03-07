@@ -3,7 +3,7 @@
 from datetime import datetime as d
 import unittest
 
-from pcrond import scheduler, Job
+from pcrond import scheduler, Job, Parser
 
 
 def do_nothing():
