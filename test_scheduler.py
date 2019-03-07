@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """Unit tests for pcrond.py"""
-import datetime
+from datetime import datetime as d
 import unittest
 
 from pcrond import scheduler, Job
@@ -40,6 +40,19 @@ class SchedulerTests(unittest.TestCase):
         assert job._decode_token("goofy", {'goofy': 1234}) == 1234
         with self.assertRaises(ValueError):
             job._decode_token("goofy", {})
+
+    def test_get_num_wom(self):
+        job = Job()
+        assert job.get_num_wom(d(2019, 3, 7)) == 1      #first thursday of month
+        assert job.get_num_wom(d(2019, 3, 8)) == 2      #second friday of month
+        assert job.get_num_wom(d(2019, 3, 31)) == 5     #fifth sunday of month
+
+    def test_is_last_wom(self):
+        job = Job()
+        assert not job.is_last_wom(d(2019, 3, 1))
+        assert not job.is_last_wom(d(2019, 3, 24))
+        assert job.is_last_wom(d(2019, 3, 25))
+        assert job.is_last_wom(d(2019, 3, 31))
 
     def test_job_constructor_basic(self):
         job = Job("* 4 * * *")
@@ -82,9 +95,9 @@ class SchedulerTests(unittest.TestCase):
         job = Job("* * L * *")
         assert job.allowed_last_dom
         assert job.allowed_dom == set([-1])
-        assert job._should_run_at(datetime.datetime(2019, 3, 31))
-        assert not job._should_run_at(datetime.datetime(2019, 3, 28))
-        assert job._should_run_at(datetime.datetime(2019, 2, 28))
+        assert job._should_run_at(d(2019, 3, 31))
+        assert not job._should_run_at(d(2019, 3, 28))
+        assert job._should_run_at(d(2019, 2, 28))
 
     def test_job_constructor_L_dow(self):
         job = Job("* * * * 5l")      # 5=friday, l=only the last one of the month
@@ -93,9 +106,9 @@ class SchedulerTests(unittest.TestCase):
         assert not job.allowed_last_dom
         assert not job.allowed_every_dow
         assert job.allowed_dow == set([5-7])
-        assert job._should_run_at(datetime.datetime(2019, 3, 29))       # was fri
-        assert not job._should_run_at(datetime.datetime(2019, 3, 28))   # was thu
-        assert not job._should_run_at(datetime.datetime(2019, 3, 8))    # was fri
+        assert job._should_run_at(d(2019, 3, 29))       # was fri
+        assert not job._should_run_at(d(2019, 3, 28))   # was thu
+        assert not job._should_run_at(d(2019, 3, 8))    # was fri
 
     def test_job_constructor_alias(self):
         job = Job("@hourly")
@@ -146,7 +159,7 @@ class SchedulerTests(unittest.TestCase):
     def test_add_job_run_pending(self):
         """ schedule a task for this exact minute, then invoke run_pending()"""
         test_obj = {'modified': False}
-        now = datetime.datetime.now()
+        now = d.now()
         scheduler.cron("%d %d * * *" % (now.minute, now.hour), modify_obj(test_obj))
         assert len(scheduler.jobs) == 1
         scheduler.run_pending()
@@ -155,7 +168,7 @@ class SchedulerTests(unittest.TestCase):
     def test_add_job_run_pending_not(self):
         """ schedule a task for this exact minute+5, then invoke run_pending()"""
         test_obj = {'modified': False}
-        now = datetime.datetime.now()
+        now = d.now()
         scheduler.cron("%d %d * * *" % (now.minute+5, now.hour), modify_obj(test_obj))
         assert len(scheduler.jobs) == 1
         scheduler.run_pending()

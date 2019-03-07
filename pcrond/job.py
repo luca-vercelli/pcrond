@@ -76,7 +76,7 @@ class Job(object):
 
         # Day of week.
         # 5L = last friday of the month
-        # 2#5 = second friday of the month
+        # 5#2 = second friday of the month
         [self.allowed_every_dow, self.allowed_dow] = self._parse_day_in_week(crontab_lst[4])
 
         self.allowed_last_dom = (-1 in self.allowed_dom)
@@ -164,9 +164,6 @@ class Job(object):
                     "Wrong format '%s' - expecting an integer after '*/'" % s)
             return [False, set(range(minval, maxval, step))]
         else:                           # at given minutes
-            # DEBUG
-            # import pdb
-            # pdb.set_trace()
             # here s == '1,2-5/3,jul,10-nov'
             (singletons, ranges) = self._split_tokens(s)
             # here singletons == ['1', 'jul'], ranges == [['2', '5', 3], ['10', 'nov', 1]]
@@ -206,9 +203,16 @@ class Job(object):
         last_day_of_month = calendar.monthrange(now.year, now.month)[1]
         return last_day_of_month
 
+    def get_num_wom(self, now):
+        """
+        for a given date, return the number of the week in the month (1..5)
+        intended for #
+        """
+        return ((now.day - 1) // 7) + 1
+
     def is_last_wom(self, now):
         """ true if given date is in the last week of the month """
-        return now.day >= self.get_last_dom(now) - 7
+        return now.day > self.get_last_dom(now) - 7
 
     def __lt__(self, other):
         """
