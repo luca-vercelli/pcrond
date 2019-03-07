@@ -36,11 +36,10 @@ class SchedulerTests(unittest.TestCase):
 
     def test_decode_token(self):
         job = Job()
-        assert job._decode_token("1234", {}) == 1234
+        assert job._decode_token("1234", {}) == "1234"
+        assert job._decode_token("goofy", {'goofy': "1234"}) == "1234"
         assert job._decode_token("goofy", {'goofy': 1234}) == 1234
-        with self.assertRaises(ValueError):
-            job._decode_token("goofy", {})
-
+ 
     def test_get_num_wom(self):
         job = Job()
         assert job.get_num_wom(d(2019, 3, 7)) == 1      #first thursday of month

@@ -2,10 +2,10 @@
 import logging
 logger = logging.getLogger('schedule')
 
-MONTH_OFFSET = {'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,
-                'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12}
-WEEK_OFFSET = {'sun': 0, 'mon': 1, 'tue': 2, 'wed': 3, 'thu': 4, 'fri': 5, 'sat': 6,
-               '0l': -7, '1l': -6, '2l': -5, '3l': -4, '4l': -3, '5l': -2, '6l': -1}
+MONTH_OFFSET = {'jan': '1', 'feb': '2', 'mar': '3', 'apr': '4', 'may': '5', 'jun': '6',
+                'jul': '7', 'aug': '8', 'sep': '9', 'oct': '10', 'nov': '11', 'dec': '12'}
+WEEK_OFFSET = {'sun': '0', 'mon': '1', 'tue': '2', 'wed': '3', 'thu': '4', 'fri': '5', 'sat': '6',
+               '0l': '-7', '1l': '-6', '2l': '-5', '3l': '-4', '4l': '-3', '5l': '-2', '6l': '-1'}
 ALIASES = {'@yearly':    '0 0 1 1 *',
            '@annually':  '0 0 1 1 *',
            '@monthly':   '0 0 1 * *',
@@ -92,22 +92,13 @@ class Job(object):
 
     def _decode_token(self, token, offsets):
         """
-        return int(token), possibly replacing token with offsets[token]
+        return offsets[token], or token if not found
         offset keys are **lowercase**
         """
         try:
-            newtoken = offsets[token]
-            try:
-                return int(newtoken)
-            except ValueError:
-                # this should not happen
-                raise ValueError("token %s maps to %s, however the latter is not an integer" % (token, newtoken))
+            return offsets[token]
         except KeyError:
-            pass
-        try:
-            return int(token)
-        except ValueError:
-            raise ValueError(("token %s is not an integer, nor it is a known constant") % token)
+            return token
 
     def _split_tokens(self, s):
         """
@@ -163,18 +154,19 @@ class Job(object):
             try:
                 step = int(s[2:])
             except ValueError:
-                raise ValueError(
-                    "Wrong format '%s' - expecting an integer after '*/'" % s)
+                raise ValueError("Wrong format '%s' - expecting an integer after '*/'" % s)
             return [False, set(range(minval, maxval, step))]
         else:                           # at given minutes
             # here s == '1,2-5/3,jul,10-nov'
             (singletons, ranges) = self._split_tokens(s)
             # here singletons == ['1', 'jul'], ranges == [['2', '5', 3], ['10', 'nov', 1]]
-            if callback is not None:
-                callback(singletons, ranges)
             singletons = [self._decode_token(x, offsets) for x in singletons]
             ranges = [[self._decode_token(rng[0], offsets), self._decode_token(rng[1], offsets), rng[2]]
                       for rng in ranges]
+            if callback is not None:
+                (singletons, ranges) = callback(singletons, ranges)
+            singletons = map(int, singletons)           # may raise ValueError
+            ranges = [map(int, rng) for rng in ranges]   # may raise ValueError
             # here singletons == [1, 7], ranges == [[2, 5, 3], [10, 11, 1]]
             ranges = [range(rng[0], rng[1] + 1, rng[2]) for rng in ranges if (rng[0] <= rng[1])] + \
                      [range(rng[0], maxval, rng[2]) for rng in ranges if rng[0] > rng[1]] + \
@@ -192,12 +184,19 @@ class Job(object):
 
     def _parse_day_in_month(self, s):
         def ignore_w(singletons, ranges):
-            pass
-        def only_w():
-            pass
-        [a, b] = self._parse_common(s, 31, {"l": -1}, 1, ignore_w)
-        [a, c] = self._parse_common(s, 31, {}, 1, only_w)
-        return [a, b, c]
+            if [x for x in ranges for z in x if 'w' in x]:
+                raise ValueError("Cannot use W pattern inside ranges")
+            return ([x for x in singletons if x[-1] != 'w'], ranges)
+
+        def only_w(singletons, ranges):
+            return ([x[:-1] for x in singletons if  x[-1] == 'w'], [])
+
+        [every, dom] = self._parse_common(s, 31, {'l': '-1'}, 1, ignore_w)
+        if every:
+            wdom = None
+        else:
+            [every, wdom] = self._parse_common(s, 31, {}, 1, only_w)
+        return [every, dom, wdom]
 
     def _parse_month(self, s):
         return self._parse_common(s, 12, MONTH_OFFSET, 1)
