@@ -84,9 +84,13 @@ class Job(object):
                                   and len(self.allowed_dow) > 0
                                   and min(self.allowed_dow) < 0)
 
-        self.must_consider_w = (self.allowed_dow is not None
-                                and len(self.allowed_dow) > 0
-                                and min(self.allowed_dow) >= 7)
+        # warning: in Python, Monday is 0 and Sunday is 6
+        #          in cron, Sunday=0
+        if self.allowed_dow:
+            t1 = set([(x + 6) % 7 for x in self.allowed_dow if x >= 0])
+            t2 = set([(x + 13) % 7 for x in self.allowed_dow if x < 0])
+            self.allowed_dow = t1
+            self.allowed_dowl = t2
 
         self.crontab_pattern = crontab_lst
 
@@ -251,10 +255,10 @@ class Job(object):
                 and (self.allowed_every_hour or now.hour in self.allowed_hours)
                 and (self.allowed_every_min or now.minute in self.allowed_min)
                 and (self.allowed_every_dow
-                     or ((now.weekday() + 1) % 7) in self.allowed_dow
+                     or (now.weekday() in self.allowed_dow
                      or (self.must_consider_wom
-                         and (now.weekday() - 6) in self.allowed_dow
-                         and self.is_last_wom(now)))
+                         and now.weekday() in self.allowed_dowl
+                         and self.is_last_wom(now))))
                 and (self.allowed_every_dom
                      or now.day in self.allowed_dom
                      or (self.allowed_last_dom and now.day == self.get_last_dom(now)))

@@ -86,7 +86,7 @@ class SchedulerTests(unittest.TestCase):
         assert job.allowed_months == set([3, 4, 5, 6, 12])
         ###
         assert not job.allowed_every_dow
-        assert job.allowed_dow == set([1])
+        assert job.allowed_dow == set([0])             # 1 in cron, 0 in python
         ###
         assert job.allowed_every_year
 
@@ -104,7 +104,8 @@ class SchedulerTests(unittest.TestCase):
         assert job.allowed_every_dom
         assert not job.allowed_last_dom
         assert not job.allowed_every_dow
-        assert job.allowed_dow == set([5-7])
+        assert not job.allowed_dow
+        assert job.allowed_dowl == set([4])             # 5 in cron, 4 in python
         assert job._should_run_at(d(2019, 3, 29))       # was fri
         assert not job._should_run_at(d(2019, 3, 28))   # was thu
         assert not job._should_run_at(d(2019, 3, 8))    # was fri
