@@ -5,8 +5,7 @@ logger = logging.getLogger('schedule')
 MONTH_OFFSET = {'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,
                 'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12}
 WEEK_OFFSET = {'sun': 0, 'mon': 1, 'tue': 2, 'wed': 3, 'thu': 4, 'fri': 5, 'sat': 6,
-               '0l': -7, '1l': -6, '2l': -5, '3l': -4, '4l': -3, '5l': -2, '6l': -1,
-               '0w': 7, '1w': 8, '2w': 9, '3w': 10, '4w': 11, '5w': 12, '6w': 13}
+               '0l': -7, '1l': -6, '2l': -5, '3l': -4, '4l': -3, '5l': -2, '6l': -1}
 ALIASES = {'@yearly':    '0 0 1 1 *',
            '@annually':  '0 0 1 1 *',
            '@monthly':   '0 0 1 * *',
@@ -72,8 +71,8 @@ class Job(object):
         # Day of month.
         # L = last day
         # 15W= last working day before 15th, or the first one after if none
-        [self.allowed_every_dom, self.allowed_dom] = self._parse_day_in_month(crontab_lst[2])
-
+        [self.allowed_every_dom, self.allowed_dom, self.allowed_wdom] = self._parse_day_in_month(crontab_lst[2])
+        
         # Day of week.
         # 5L = last friday of the month
         # 5#2 = second friday of the month
@@ -142,7 +141,7 @@ class Job(object):
         # here ranges_with_step == [['2', '5', 3]]
         return (singletons, ranges_no_step + ranges_with_step)
 
-    def _parse_common(self, s, maxval, offsets={}, minval=0, parser=None):
+    def _parse_common(self, s, maxval, offsets={}, minval=0, callback=None):
         """
         Generate a set of integers, corresponding to "allowed values".
         Work for minute, hours, weeks, month, ad days of week, because they
@@ -153,6 +152,10 @@ class Job(object):
             es. 60 for minutes, 12 for month, ...
         :param offsets:
             a dict mapping names (es. "mar") to their offsets (es. 2).
+        :param minval:
+            es. 1 for days and months
+        :param callback:
+            a 2-ary function that pre-elaborates singletons and ranges
         """
         if s == "*":
             return [True, []]           # every minute
@@ -167,6 +170,8 @@ class Job(object):
             # here s == '1,2-5/3,jul,10-nov'
             (singletons, ranges) = self._split_tokens(s)
             # here singletons == ['1', 'jul'], ranges == [['2', '5', 3], ['10', 'nov', 1]]
+            if callback is not None:
+                callback(singletons, ranges)
             singletons = [self._decode_token(x, offsets) for x in singletons]
             ranges = [[self._decode_token(rng[0], offsets), self._decode_token(rng[1], offsets), rng[2]]
                       for rng in ranges]
@@ -186,7 +191,13 @@ class Job(object):
         return self._parse_common(s, 24)
 
     def _parse_day_in_month(self, s):
-        return self._parse_common(s, 31, {"l": -1})
+        def ignore_w(singletons, ranges):
+            pass
+        def only_w():
+            pass
+        [a, b] = self._parse_common(s, 31, {"l": -1}, 1, ignore_w)
+        [a, c] = self._parse_common(s, 31, {}, 1, only_w)
+        return [a, b, c]
 
     def _parse_month(self, s):
         return self._parse_common(s, 12, MONTH_OFFSET, 1)
