@@ -2,6 +2,7 @@
 """Unit tests for pcrond.py"""
 import unittest
 import logging
+import sys
 from datetime import datetime as d
 from pcrond import scheduler, Job, Parser
 
@@ -231,7 +232,8 @@ class SchedulerTests(unittest.TestCase):
         scheduler.load_crontab_file(os.path.join("tests", "crontab.txt"))
         assert len(scheduler.jobs) == 4
 
-    def _test_load_crontab_and_main_loop(self):
+    @unittest.skipIf(sys.platform.startswith("win"), "requires *NIX")
+    def test_load_crontab_and_main_loop(self):
         # FIXME not working
         # and even if it worked, this is a long test, and will run on *nix only
         import os
@@ -245,10 +247,17 @@ class SchedulerTests(unittest.TestCase):
         start_time = d.now()
         thread = Thread(target=run_in_another_thread)
         thread.start()
-        time.sleep(65)
-        thread.stop()
+        print("Waiting for 15 seconds...")
+        time.sleep(15)
+        scheduler.ask_for_stop = True
+        thread.join()
         assert os.path.isfile(os.path.join("tests", "somefile"))
         assert os.path.getmtime(os.path.join("tests", "somefile")) >= d.utcfromtimestamp(start_time)
+
+    @unittest.skipUnless(sys.platform.startswith("win"), "requires Windows")
+    def test_load_crontab_and_main_loop(self):
+        # TODO
+        pass
 
 
 if __name__ == '__main__':

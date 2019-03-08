@@ -1,8 +1,14 @@
 
-import datetime
+from datetime import datetime, timedelta
 import logging
 logger = logging.getLogger('pcrond')
-reboot_time = datetime.datetime.now()
+
+"""
+@reboot commands will be executed after this number of seconds
+"""
+WAIT_BEFORE_REBOOT = 10
+
+reboot_time = datetime.now() + timedelta(seconds=WAIT_BEFORE_REBOOT)
 
 ALIASES = {'@yearly':    '0 0 1 1 *',
            '@annually':  '0 0 1 1 *',
@@ -11,7 +17,7 @@ ALIASES = {'@yearly':    '0 0 1 1 *',
            '@daily':     '0 0 * * *',
            '@midnight':  '0 0 * * *',
            '@hourly':    '0 * * * *',
-           '@reboot':    '%d %d %d %d * %d' % (reboot_time.minute + 1,
+           '@reboot':    '%d %d %d %d * %d' % (reboot_time.minute,
                                                reboot_time.hour,
                                                reboot_time.day,
                                                reboot_time.month,
@@ -128,8 +134,7 @@ class Job(object):
         """
         :return: ``True`` if the job should be run now.
         """
-        import datetime
-        now = datetime.datetime.now()
+        now = datetime.now()
         return self._should_run_at(now)
 
     def _should_run_at(self, now):
