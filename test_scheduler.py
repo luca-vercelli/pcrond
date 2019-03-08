@@ -255,7 +255,7 @@ class SchedulerTests(unittest.TestCase):
         assert os.path.getmtime(os.path.join("tests", "somefile")) >= d.utcfromtimestamp(start_time)
 
     @unittest.skipUnless(sys.platform.startswith("win"), "requires Windows")
-    def test_load_crontab_and_main_loop(self):
+    def test_load_crontab_and_main_loop_win(self):
         # TODO
         pass
 

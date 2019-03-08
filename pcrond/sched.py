@@ -14,7 +14,7 @@ def std_launch_func(cmd_splitted, stdin=None):
     if stdin is None:
         def f():
             from subprocess import Popen
-            p = Popen(cmd_splitted, stdin=None, stdout=None, stderr=None)
+            Popen(cmd_splitted, stdin=None, stdout=None, stderr=None)
             # not returning anything here
     else:
         def f():
