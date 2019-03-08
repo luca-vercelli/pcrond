@@ -11,7 +11,7 @@ SHOW_LOGGING = False
 
 logger = logging.getLogger()
 if SHOW_LOGGING:
-    logging.basicConfig()
+    logging.basicConfig(level=logging.DEBUG)
 else:
     logger.addHandler(logging.NullHandler())  # do not show logs.
 
@@ -234,8 +234,7 @@ class SchedulerTests(unittest.TestCase):
 
     @unittest.skipIf(sys.platform.startswith("win"), "requires *NIX")
     def test_load_crontab_and_main_loop(self):
-        # FIXME not working
-        # and even if it worked, this is a long test, and will run on *nix only
+        # FIXME this is a slow test, currently 1 minute
         import os
         import time
         from threading import Thread
@@ -250,9 +249,13 @@ class SchedulerTests(unittest.TestCase):
         print("Waiting for 15 seconds...")
         time.sleep(15)
         scheduler.ask_for_stop = True
+        print("Waiting other thread to stop...")
         thread.join()
+        print("Other thread stopped.")
         assert os.path.isfile(os.path.join("tests", "somefile"))
-        assert os.path.getmtime(os.path.join("tests", "somefile")) >= d.utcfromtimestamp(start_time)
+        #FIXME system may be utc or not...
+        #assert d.utcfromtimestamp(os.path.getmtime(os.path.join("tests", "somefile"))) >= start_time
+        assert d.fromtimestamp(os.path.getmtime(os.path.join("tests", "somefile"))) >= start_time
 
     @unittest.skipUnless(sys.platform.startswith("win"), "requires Windows")
     def test_load_crontab_and_main_loop_win(self):

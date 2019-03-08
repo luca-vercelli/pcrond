@@ -13,11 +13,13 @@ def std_launch_func(cmd_splitted, stdin=None):
     """
     if stdin is None:
         def f():
+            logger.info("Now running: " + str(cmd_splitted))
             from subprocess import Popen
             Popen(cmd_splitted, stdin=None, stdout=None, stderr=None)
             # not returning anything here
     else:
         def f():
+            logger.info("Now running: " + str(cmd_splitted))
             from subprocess import Popen, PIPE
             p = Popen(cmd_splitted, stdin=PIPE, stdout=None, stderr=None)
             p.communicate(input=stdin)
@@ -45,7 +47,9 @@ class Scheduler(object):
         in one hour increments then your job won't be run 60 times in
         between but only once.
         """
+        logger.debug("available jobs: " + str(self.jobs))
         runnable_jobs = (job for job in self.jobs if job.should_run())
+        logger.debug("runnable jobs: " + str(self.jobs))
         for job in runnable_jobs:
             job.run()
 
@@ -183,3 +187,6 @@ class Scheduler(object):
         while not self.ask_for_stop:
             self.run_pending()
             time.sleep(self.delay)
+            # FIXME this will look at self.ask_for_stop only every self.delay seconds
+            # see https://stackoverflow.com/questions/5114292/break-interrupt-a-time-sleep-in-python
+
