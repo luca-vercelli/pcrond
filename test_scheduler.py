@@ -248,7 +248,7 @@ class SchedulerTests(unittest.TestCase):
         time.sleep(65)
         thread.stop()
         assert os.path.isfile(os.path.join("tests", "somefile"))
-        assert os.path.getmtime(path) >= d.utcfromtimestamp(start_time)
+        assert os.path.getmtime(os.path.join("tests", "somefile")) >= d.utcfromtimestamp(start_time)
 
 
 if __name__ == '__main__':
