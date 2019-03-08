@@ -4,4 +4,5 @@
 30 5-6 * * mon echo donald duck
 30 * */3 * mon 2020 echo mickey mouse
 here is some very bad pattern that must not break other tasks to run
+too short line
 @daily echo it's midnight
