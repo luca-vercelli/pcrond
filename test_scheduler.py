@@ -220,7 +220,7 @@ class SchedulerTests(unittest.TestCase):
         """ load test crontab file """
         import os
         scheduler.load_crontab_file(os.path.join("tests", "crontab.txt"))
-        assert len(scheduler.jobs) == 3
+        assert len(scheduler.jobs) == 4
 
 
 if __name__ == '__main__':

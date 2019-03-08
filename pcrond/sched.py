@@ -100,32 +100,33 @@ class Scheduler(object):
         """
         pieces = crontab_line.split()
 
-        # is pattern using aliases?
         if pieces[0] in ALIASES.keys():
             try:
-                # pattern using alias
-                job = self.cron(pieces[0:1], job_func_func(pieces[1:]))
+                # CASE 1 - pattern using alias
+                job = self.cron(pieces[0], job_func_func(pieces[1:]))
                 return job
             except ValueError:
                 # shouldn't happen
-                print("Error at line %d, cannot parse pattern" % rownum)
+                logger.error("Error at line %d, cannot parse pattern, the line will be ignored" % rownum)
+                logger.exception('Caused by:')
                 return None
         if len(pieces) < 6:
-            print("Error at line %d, expected at least 6 tokens" % rownum)
+            logger.error("Error at line %d, expected at least 6 tokens" % rownum)
             return None
         if len(pieces) >= 7:
             try:
-                # pattern including year
+                # CASE 2 - pattern including year
                 job = self.cron(" ".join(pieces[0:6]), job_func_func(pieces[6:]))
                 return job
             except ValueError:
                 pass
         try:
-            # pattern not including  year
+            # CASE 3 - pattern not including  year
             job = self.cron(" ".join(pieces[0:5]), job_func_func(pieces[5:]))
             return job
         except ValueError:
-            print("Error at line %d, cannot parse pattern" % rownum)
+            logger.error("Error at line %d, cannot parse pattern, the line will be ignored" % rownum)
+            logger.exception('Caused by:')
             return None
 
     def _split_input_line(self, s):
