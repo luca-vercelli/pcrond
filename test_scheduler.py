@@ -1,9 +1,18 @@
 #!/usr/bin/env python
 """Unit tests for pcrond.py"""
-from datetime import datetime as d
 import unittest
-
+import logging
+from datetime import datetime as d
 from pcrond import scheduler, Job, Parser
+
+# when tests with a logger fail, you can set this to True
+SHOW_LOGGING = False
+
+logger = logging.getLogger()
+if SHOW_LOGGING:
+    logging.basicConfig()
+else:
+    logger.addHandler(logging.NullHandler())  # do not show logs.
 
 
 def do_nothing():
@@ -221,6 +230,25 @@ class SchedulerTests(unittest.TestCase):
         import os
         scheduler.load_crontab_file(os.path.join("tests", "crontab.txt"))
         assert len(scheduler.jobs) == 4
+
+    def _test_load_crontab_and_main_loop(self):
+        # FIXME not working
+        # and even if it worked, this is a long test, and will run on *nix only
+        import os
+        import time
+        from threading import Thread
+
+        def run_in_another_thread():
+            scheduler.load_crontab_file(os.path.join("tests", "crontab2.txt"))
+            scheduler.main_loop()
+
+        start_time = d.now()
+        thread = Thread(target=run_in_another_thread)
+        thread.start()
+        time.sleep(65)
+        thread.stop()
+        assert os.path.isfile(os.path.join("tests", "somefile"))
+        assert os.path.getmtime(path) >= d.utcfromtimestamp(start_time)
 
 
 if __name__ == '__main__':

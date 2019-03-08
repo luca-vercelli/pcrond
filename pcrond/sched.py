@@ -4,17 +4,24 @@ from .job import Job, ALIASES
 import logging
 import time
 
-logger = logging.getLogger('schedule')
+logger = logging.getLogger('pcrond')
 
 
-def std_launch_func(cmd_splitted):
+def std_launch_func(cmd_splitted, stdin=None):
     """
     Default way of executing commands is to invoke subprocess.run()
     """
-    def f():
-        import subprocess
-        subprocess.run(cmd_splitted)
-        # not returning anything here
+    if stdin is None:
+        def f():
+            from subprocess import run
+            run(cmd_splitted)
+            # not returning anything here
+    else:
+        def f():
+            from subprocess import Popen, PIPE
+            p = Popen(cmd_splitted, stdin=PIPE)
+            p.communicate(input=stdin)
+            # not returning anything here
     return f
 
 
@@ -27,6 +34,7 @@ class Scheduler(object):
     def __init__(self):
         self.delay = 60         # in seconds
         self.jobs = []
+        self.ask_for_stop = False
 
     def run_pending(self):
         """
@@ -88,7 +96,7 @@ class Scheduler(object):
         self.jobs.append(job)
         return job
 
-    def _load_crontab_line(self, rownum, crontab_line, job_func_func=std_launch_func):
+    def _load_crontab_line(self, rownum, crontab_line, job_func_func=std_launch_func, stdin=None):
         """
         create a Job from a single crontab entry, and add it to this Scheduler
         :param crontab_line:
@@ -105,10 +113,10 @@ class Scheduler(object):
                 # CASE 1 - pattern using alias
                 job = self.cron(pieces[0], job_func_func(pieces[1:]))
                 return job
-            except ValueError:
+            except ValueError as e:
                 # shouldn't happen
-                logger.error("Error at line %d, cannot parse pattern, the line will be ignored" % rownum)
-                logger.exception('Caused by:')
+                logger.error(("Error at line %d, cannot parse pattern, the line will be ignored.\r\n" +
+                              "Inner Exception: %s") % (rownum, str(e)))
                 return None
         if len(pieces) < 6:
             logger.error("Error at line %d, expected at least 6 tokens" % rownum)
@@ -124,9 +132,9 @@ class Scheduler(object):
             # CASE 3 - pattern not including  year
             job = self.cron(" ".join(pieces[0:5]), job_func_func(pieces[5:]))
             return job
-        except ValueError:
-            logger.error("Error at line %d, cannot parse pattern, the line will be ignored" % rownum)
-            logger.exception('Caused by:')
+        except ValueError as e:
+            logger.error(("Error at line %d, cannot parse pattern, the line will be ignored.\r\n" +
+                          "Inner Exception: %s") % (rownum, str(e)))
             return None
 
     def _split_input_line(self, s):
@@ -162,7 +170,8 @@ class Scheduler(object):
                     if line != "" and line[0] != "#":
                         # skip empty lines and comments
                         pieces = self._split_input_line(line)
-                        self._load_crontab_line(rownum, pieces[0], job_func_func)
+                        stdin = pieces[1] if len(pieces) > 1 else None
+                        self._load_crontab_line(rownum, pieces[0], job_func_func, stdin)
                         # TODO support % sign inside command, should consider pieces[1] if any
         logger.info(str(len(self.jobs)) + " jobs loaded from configuration file")
 
@@ -171,6 +180,6 @@ class Scheduler(object):
         Perform main run-and-wait loop.
         """
         import time
-        while True:
+        while not self.ask_for_stop:
             self.run_pending()
             time.sleep(self.delay)

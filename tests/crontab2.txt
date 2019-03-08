@@ -1,0 +1,3 @@
+# crontab entries used during tests
+
+@reboot touch tests/somefile

@@ -1,7 +1,8 @@
 
-
+import datetime
 import logging
-logger = logging.getLogger('schedule')
+logger = logging.getLogger('pcrond')
+reboot_time = datetime.datetime.now()
 
 ALIASES = {'@yearly':    '0 0 1 1 *',
            '@annually':  '0 0 1 1 *',
@@ -10,6 +11,11 @@ ALIASES = {'@yearly':    '0 0 1 1 *',
            '@daily':     '0 0 * * *',
            '@midnight':  '0 0 * * *',
            '@hourly':    '0 * * * *',
+           '@reboot':    '%d %d %d %d * %d' % (reboot_time.minute + 1,
+                                               reboot_time.hour,
+                                               reboot_time.day,
+                                               reboot_time.month,
+                                               reboot_time.year)
            }
 
 
@@ -46,10 +52,6 @@ class Job(object):
 
         if crontab in ALIASES.keys():
             crontab = ALIASES[crontab]
-        elif crontab == "@reboot":
-            import datetime
-            now = datetime.datetime.now()
-            crontab = "%d %d * %d * %d" % (now.minute + 1, now.hour, now.month, now.year)
 
         crontab_lst = crontab.split()
 
