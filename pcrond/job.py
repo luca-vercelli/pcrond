@@ -3,12 +3,7 @@ from datetime import datetime, timedelta
 import logging
 logger = logging.getLogger('pcrond')
 
-"""
-@reboot commands will be executed after this number of seconds
-"""
-WAIT_BEFORE_REBOOT = 10
-
-reboot_time = datetime.now() + timedelta(seconds=WAIT_BEFORE_REBOOT)
+reboot_time = datetime.now()
 
 ALIASES = {'@yearly':    '0 0 1 1 *',
            '@annually':  '0 0 1 1 *',

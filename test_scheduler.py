@@ -246,8 +246,8 @@ class SchedulerTests(unittest.TestCase):
         start_time = d.now()
         thread = Thread(target=run_in_another_thread)
         thread.start()
-        print("Waiting for 15 seconds...")
-        time.sleep(15)
+        print("Waiting for 3 seconds...")
+        time.sleep(3)
         scheduler.ask_for_stop = True
         print("Waiting other thread to stop...")
         thread.join()
