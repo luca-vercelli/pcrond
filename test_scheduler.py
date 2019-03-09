@@ -3,7 +3,7 @@
 import unittest
 import logging
 import sys
-from datetime import datetime as d
+from datetime import datetime as d, timedelta
 from pcrond import scheduler, Job, Parser
 
 # when tests with a logger fail, you can set this to True
