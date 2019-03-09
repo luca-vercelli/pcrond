@@ -253,8 +253,8 @@ class SchedulerTests(unittest.TestCase):
         thread.join()
         print("Other thread stopped.")
         assert os.path.isfile(os.path.join("tests", "somefile"))
-        #FIXME system may be utc or not...
-        #assert d.utcfromtimestamp(os.path.getmtime(os.path.join("tests", "somefile"))) >= start_time
+        # FIXME system may be utc or not...
+        # assert d.utcfromtimestamp(os.path.getmtime(os.path.join("tests", "somefile"))) >= start_time
         assert d.fromtimestamp(os.path.getmtime(os.path.join("tests", "somefile"))) >= start_time
 
     @unittest.skipUnless(sys.platform.startswith("win"), "requires Windows")

@@ -189,4 +189,3 @@ class Scheduler(object):
             time.sleep(self.delay)
             # FIXME this will look at self.ask_for_stop only every self.delay seconds
             # see https://stackoverflow.com/questions/5114292/break-interrupt-a-time-sleep-in-python
-
